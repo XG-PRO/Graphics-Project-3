@@ -1,3 +1,6 @@
+#define _USE_MATH_DEFINES
+
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -11,13 +14,29 @@
 #define EAST_ROOF	3
 #define SOUTH_ROOF	4
 
+#define HEIGHT_CAMERA 5.0f
+#define RADIUS_CAMERA 6.0f
+
+#define ROTATION_STEP 3.0f
+
+#define WHITE	1.0f, 1.0f, 1.0f
+#define RED		1.0f, 0.0f, 0.0f
+#define YELLOW	1.0f, 1.0f, 0.0f
+#define GREEN	0.0f, 1.0f, 0.0f
+#define BLUE	0.0f, 0.0f, 1.0f
+#define CYAN	0.0f, 1.0f, 1.0f
+#define PURPLE	0.3f, 0.216f, 0.38f
+#define ORANGE	1.0f, 0.4f, 0.0f
+#define FOREST	0.272f, 0.86f, 0.672f
+
+typedef GLfloat vector3f[3];
 
 static volatile bool polygon_high = true;
 static volatile bool spotlight_on = true;
 static volatile bool smooth_shade = true;
 
-static const int HEIGHT_CAMERA = 5;
-static const int RADIUS_CAMERA = 6;
+static volatile vector3f cam_pos = { 0.0f, HEIGHT_CAMERA, RADIUS_CAMERA };
+static volatile GLfloat cam_angle = 0.0f;
 
 
 // ---------------------- MENU IMPLEMENTATION (BEGIN) ---------------------- //
@@ -90,11 +109,15 @@ void main_menu(int op_id)
 
 void display(void)
 {
+	// Projection box side half-length
+	static const GLdouble b = 15.0;
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-5.0, 5.0, -2.0, 6.0, -5.0, 5.0);
+	glOrtho(-b, b, -b, b, -b, b);
+	gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -104,37 +127,45 @@ void display(void)
 	// ------------------- HOUSE CONSTRUCTION (BEGIN) -------------------
 	glPushMatrix();
 
+	glColor3f(RED);
 	glCallList(EAST_WALL);
 
 	// West wall constructed by rotating the East wall by 180 deg @y axis
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glColor3f(ORANGE);
 	glCallList(EAST_WALL);
 
 	glPopMatrix();
 	glPushMatrix();
 
+	glColor3f(YELLOW);
 	glCallList(SOUTH_WALL);
 
 	// North wall constructed by rotating the South wall by 180 deg @y axis
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glColor3f(CYAN);
 	glCallList(SOUTH_WALL);
 
 	glPopMatrix();
 	glPushMatrix();
 
+	glColor3f(FOREST);
 	glCallList(EAST_ROOF);
 
 	// West roof constructed by rotation the East roof by 180 deg @y axis
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glColor3f(GREEN);
 	glCallList(EAST_ROOF);
-
+	
 	glPopMatrix();
 	glPushMatrix();
 
+	glColor3f(BLUE);
 	glCallList(SOUTH_ROOF);
 
 	// North roof constructed by rotation the South roof by 180 deg @y axis
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glColor3f(PURPLE);
 	glCallList(SOUTH_ROOF);
 
 	glPopMatrix();
@@ -145,12 +176,30 @@ void display(void)
 
 void special_key_handler(int key, int x, int y)
 {
+	static GLfloat angle_rad = 0.0f;
+
 	if (key == GLUT_KEY_RIGHT) {
-		// Rotate camera towards positive direction @y axis
+		// Rotate camera towards positive direction by some deg @y axis
+		cam_angle += ROTATION_STEP;
+		if (cam_angle >= 360.0f) {
+			cam_angle -= 360.0f;
+		}
 	}
 	else if (key == GLUT_KEY_LEFT) {
-		// Rotate camera towards negative direction @y axis
+		// Rotate camera towards negative direction by some deg @y axis
+		cam_angle -= ROTATION_STEP;
+		if (cam_angle <= 0.0f) {
+			cam_angle += 360.0f;
+		}
 	}
+	else return;
+
+	angle_rad = cam_angle * M_PI / 180.0f;
+
+	cam_pos[0] = RADIUS_CAMERA * sin(angle_rad);
+	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad);
+
+	glutPostRedisplay();
 }
 
 void init_lists(void)
