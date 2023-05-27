@@ -6,30 +6,25 @@
 #include <stdbool.h>
 #include <GL/glut.h>
 
-#define WINDOW_WIDTH  800
-#define WINDOW_HEIGHT 800
+#define WINDOW_WIDTH  500
+#define WINDOW_HEIGHT 500
 
 #define EAST_WALL	0b001
 #define SOUTH_WALL	0b010
 #define EAST_ROOF	0b011
 #define SOUTH_ROOF	0b100
+#define GROUND      0b101
 
-#define HEIGHT_CAMERA 4.0
-#define RADIUS_CAMERA 6.0
+#define HEIGHT_CAMERA 40.0
+#define RADIUS_CAMERA 70.0
 
 #define ROTATION_STEP 3.0
 
-#define WHITE   1.000f, 1.000f, 1.000f
-#define RED     1.000f, 0.000f, 0.000f
-#define YELLOW  1.000f, 1.000f, 0.000f
-#define GREEN   0.000f, 1.000f, 0.000f
-#define BLUE    0.000f, 0.000f, 1.000f
-#define CYAN    0.000f, 1.000f, 1.000f
-#define PURPLE  0.300f, 0.216f, 0.380f
-#define ORANGE  1.000f, 0.400f, 0.000f
-#define FOREST  0.272f, 0.860f, 0.672f
+#define GRASS   0.00000000f, 0.6039216f, 0.09019608f
+#define BROWN   0.36078432f, 0.2509804f, 0.20000000f
+#define GRAY    0.30000000f, 0.3000000f, 0.30000000f
 
-#define SQRT_75_PLUS_5 13.660254037844387
+#define SQRT_75_PLUS_10 18.66025403784439
 
 
 typedef GLdouble vector3lf[3];
@@ -111,16 +106,61 @@ void main_menu(int op_id)
 // ---------------------- MENU IMPLEMENTATION (END) ---------------------- //
 
 
+void build_house(void)
+{
+	// ------------------- HOUSE CONSTRUCTION (BEGIN) -------------------
+	glPushMatrix();
+
+	glColor3f(BROWN);
+	// EAST wall
+	glCallList(EAST_WALL);
+
+	// WEST wall constructed by rotating the East wall by 180 deg @y axis
+	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glCallList(EAST_WALL);
+
+	glPopMatrix();
+	glPushMatrix();
+
+	// South wall
+	glCallList(SOUTH_WALL);
+
+	// NORTH wall constructed by rotating the South wall by 180 deg @y axis
+	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glCallList(SOUTH_WALL);
+
+	glPopMatrix();
+	glPushMatrix();
+
+	glColor3f(GRAY);
+	// EAST roof
+	glCallList(EAST_ROOF);
+
+	// WEST roof constructed by rotation the East roof by 180 deg @y axis
+	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glCallList(EAST_ROOF);
+
+	glPopMatrix();
+	glPushMatrix();
+
+	// SOUTH roof
+	glCallList(SOUTH_ROOF);
+
+	// NORTH roof constructed by rotation the South roof by 180 deg @y axis
+	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glCallList(SOUTH_ROOF);
+
+	glPopMatrix();
+	// ------------------- HOUSE CONSTRUCTION (END) -------------------
+}
+
 void display(void)
 {
-	// Projection cube's half-length of edge
-	static const GLdouble b = 50.0;
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-b, b, -b, b, -b, b);
+	glOrtho(-60.0, 60.0, -60.0, 60.0, -300.0, 300.0);
 	gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -128,56 +168,12 @@ void display(void)
 
 	glColor3f(1.0f, 1.0f, 1.0f);
 
-	// ------------------- HOUSE CONSTRUCTION (BEGIN) -------------------
-	glPushMatrix();
+	build_house();
 
-	glColor3f(RED);
-	// EAST wall
-	glCallList(EAST_WALL);
+	glColor3f(GRASS);
 
-	// WEST wall constructed by rotating the East wall by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glColor3f(ORANGE);
-	glCallList(EAST_WALL);
-
-	glPopMatrix();
-	glPushMatrix();
-
-	glColor3f(YELLOW);
-	// South wall
-	glCallList(SOUTH_WALL);
-
-	// NORTH wall constructed by rotating the South wall by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glColor3f(CYAN);
-	glCallList(SOUTH_WALL);
-
-	glPopMatrix();
-	glPushMatrix();
-
-	glColor3f(FOREST);
-	// EAST roof
-	glCallList(EAST_ROOF);
-
-	// WEST roof constructed by rotation the East roof by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glColor3f(GREEN);
-	glCallList(EAST_ROOF);
+	glCallList(GROUND);
 	
-	glPopMatrix();
-	glPushMatrix();
-
-	glColor3f(BLUE);
-	// SOUTH roof
-	glCallList(SOUTH_ROOF);
-
-	// NORTH roof constructed by rotation the South roof by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glColor3f(PURPLE);
-	glCallList(SOUTH_ROOF);
-
-	glPopMatrix();
-	// ------------------- HOUSE CONSTRUCTION (END) -------------------
 
 	glutSwapBuffers();
 }
@@ -217,10 +213,10 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-5.0f, -5.0f, 10.0f);
-			glVertex3f(-5.0f, 5.0f, 10.0f);
-			glVertex3f(-5.0f, 5.0f, -10.0f);
-			glVertex3f(-5.0f, -5.0f, -10.0f);
+			glVertex3f(-5.0f, 0.0f, 10.0f);
+			glVertex3f(-5.0f, 10.0f, 10.0f);
+			glVertex3f(-5.0f, 10.0f, -10.0f);
+			glVertex3f(-5.0f, 0.0f, -10.0f);
 		}
 		glEnd();
 	}
@@ -231,10 +227,10 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-5.0f, -5.0f, 10.0f);
-			glVertex3f(-5.0f, 5.0f, 10.0f);
-			glVertex3f(5.0f, 5.0f, 10.0f);
-			glVertex3f(5.0f, -5.0f, 10.0f);
+			glVertex3f(-5.0f, 0.0f, 10.0f);
+			glVertex3f(-5.0f, 10.0f, 10.0f);
+			glVertex3f(5.0f, 10.0f, 10.0f);
+			glVertex3f(5.0f, 0.0f, 10.0f);
 		}
 		glEnd();
 	}
@@ -245,10 +241,10 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-5.0f, 5.0f, 10.0f);
-			glVertex3f(-5.0f, 5.0f, -10.0f);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_5, -10.0f);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_5, 10.0f);
+			glVertex3f(-5.0f, 10.0f, 10.0f);
+			glVertex3f(-5.0f, 10.0f, -10.0f);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
 		}
 		glEnd();
 	}
@@ -259,9 +255,23 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-5.0f, 5.0f, 10.0f);
-			glVertex3f(5.0f, 5.0f, 10.0f);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_5, 10.0f);
+			glVertex3f(-5.0f, 10.0f, 10.0f);
+			glVertex3f(5.0f, 10.0f, 10.0f);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
+		}
+		glEnd();
+	}
+	glEndList();
+
+	// Grass polygon
+	glNewList(GROUND, GL_COMPILE);
+	{
+		glBegin(GL_POLYGON);
+		{
+			glVertex3f(-40.0f, 0.0f, 40.0f);
+			glVertex3f(-40.0f, 0.0f, -40.0f);
+			glVertex3f(40.0f, 0.0f, -40.0f);
+			glVertex3f(40.0f, 0.0f, 40.0f);
 		}
 		glEnd();
 	}
