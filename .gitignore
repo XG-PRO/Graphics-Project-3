@@ -1,0 +1,70 @@
+
+Debug/pentagon_fractal.obj
+.vs/Project 2/v16/.suo
+.vs/Project 2/v16/Browse.VC.db
+.vs/Project 2/v16/ipch/AutoPCH/8d8c704e95881d78/MAIN.ipch
+.vs/Project 2/v16/ipch/AutoPCH/99bba923d96a94d9/ROTATING_CUBE.ipch
+Debug/freeglut.dll
+Debug/gasket.obj
+Debug/Project 1.Build.CppClean.log
+Debug/Project 1.exe
+Debug/Project 1.exe.recipe
+Debug/Project 1.ilk
+Debug/Project 1.log
+Debug/Project 1.pdb
+Debug/Project 1.tlog/CL.command.1.tlog
+Debug/Project 1.tlog/CL.read.1.tlog
+Debug/Project 1.tlog/CL.write.1.tlog
+Debug/Project 1.tlog/link.command.1.tlog
+Debug/Project 1.tlog/link.read.1.tlog
+Debug/Project 1.tlog/link.write.1.tlog
+Debug/Project 1.tlog/Project 1.lastbuildstate
+Debug/Project 1.vcxproj.FileListAbsolute.txt
+Debug/vc142.idb
+Debug/vc142.pdb
+Dependencies/freeglut/bin/Win32/freeglut.dll
+Dependencies/freeglut/bin/x64/freeglut.dll
+Dependencies/freeglut/Copying.txt
+Dependencies/freeglut/include/GL/freeglut.h
+Dependencies/freeglut/include/GL/freeglut_ext.h
+Dependencies/freeglut/include/GL/freeglut_std.h
+Dependencies/freeglut/include/GL/glut.h
+Dependencies/freeglut/lib/Win32/freeglut.lib
+Dependencies/freeglut/lib/x64/freeglut.lib
+Dependencies/freeglut/Readme.txt
+LICENSE
+NEW/main.c
+Project 1.vcxproj
+Project 1.vcxproj.filters
+Project 1.vcxproj.user
+Project 2.sln
+README.md
+x64/Debug/freeglut.dll
+x64/Debug/main.obj
+x64/Debug/pentagon_fractal.obj
+x64/Debug/Project 1.exe.recipe
+x64/Debug/Project 1.ilk
+x64/Debug/Project 1.log
+x64/Debug/Project 1.pdb
+x64/Debug/Project 1.tlog/CL.command.1.tlog
+x64/Debug/Project 1.tlog/CL.read.1.tlog
+x64/Debug/Project 1.tlog/CL.write.1.tlog
+x64/Debug/Project 1.tlog/link.command.1.tlog
+x64/Debug/Project 1.tlog/link.read.1.tlog
+x64/Debug/Project 1.tlog/link.write.1.tlog
+x64/Debug/Project 1.tlog/Project 1.lastbuildstate
+x64/Debug/Project 1.vcxproj.FileListAbsolute.txt
+x64/Debug/Project 2.exe
+x64/Debug/Project 2.exe.recipe
+x64/Debug/Project 2.ilk
+x64/Debug/Project 2.pdb
+x64/Debug/Project 2.tlog/CL.command.1.tlog
+x64/Debug/Project 2.tlog/CL.read.1.tlog
+x64/Debug/Project 2.tlog/CL.write.1.tlog
+x64/Debug/Project 2.tlog/link.command.1.tlog
+x64/Debug/Project 2.tlog/link.read.1.tlog
+x64/Debug/Project 2.tlog/link.write.1.tlog
+x64/Debug/Project 2.tlog/Project 2.lastbuildstate
+x64/Debug/rotating_cube.obj
+x64/Debug/vc142.idb
+x64/Debug/vc142.pdb
