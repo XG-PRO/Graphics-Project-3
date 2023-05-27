@@ -13,6 +13,7 @@ static volatile bool smooth_shade = true;
 
 
 // ---------------------- MENU IMPLEMENTATION (BEGIN) ---------------------- //
+// First Sub-menu
 void polygon_submenu(int op_id)
 {
 	switch (op_id)
@@ -31,6 +32,7 @@ void polygon_submenu(int op_id)
 	}
 }
 
+// Second Sub-menu
 void spotlight_submenu(int op_id)
 {
 	switch (op_id)
@@ -49,6 +51,7 @@ void spotlight_submenu(int op_id)
 	}
 }
 
+// Third Sub-menu
 void shade_submenu(int op_id)
 {
 	switch (op_id)
@@ -67,6 +70,7 @@ void shade_submenu(int op_id)
 	}
 }
 
+// Anchor menu
 void main_menu(int op_id)
 {
 	if (op_id == 7) {
