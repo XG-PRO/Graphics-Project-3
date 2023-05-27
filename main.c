@@ -9,34 +9,36 @@
 #define WINDOW_WIDTH  700
 #define WINDOW_HEIGHT 700
 
-#define EAST_WALL	1
-#define SOUTH_WALL	2
-#define EAST_ROOF	3
-#define SOUTH_ROOF	4
+#define EAST_WALL	0b001
+#define SOUTH_WALL	0b010
+#define EAST_ROOF	0b011
+#define SOUTH_ROOF	0b100
 
-#define HEIGHT_CAMERA 5.0f
-#define RADIUS_CAMERA 6.0f
+#define HEIGHT_CAMERA 4.0
+#define RADIUS_CAMERA 6.0
 
-#define ROTATION_STEP 3.0f
+#define ROTATION_STEP 3.0
 
-#define WHITE	1.0f, 1.0f, 1.0f
-#define RED		1.0f, 0.0f, 0.0f
-#define YELLOW	1.0f, 1.0f, 0.0f
-#define GREEN	0.0f, 1.0f, 0.0f
-#define BLUE	0.0f, 0.0f, 1.0f
-#define CYAN	0.0f, 1.0f, 1.0f
-#define PURPLE	0.3f, 0.216f, 0.38f
-#define ORANGE	1.0f, 0.4f, 0.0f
-#define FOREST	0.272f, 0.86f, 0.672f
+#define WHITE   1.000f, 1.000f, 1.000f
+#define RED     1.000f, 0.000f, 0.000f
+#define YELLOW  1.000f, 1.000f, 0.000f
+#define GREEN   0.000f, 1.000f, 0.000f
+#define BLUE    0.000f, 0.000f, 1.000f
+#define CYAN    0.000f, 1.000f, 1.000f
+#define PURPLE  0.300f, 0.216f, 0.380f
+#define ORANGE  1.000f, 0.400f, 0.000f
+#define FOREST  0.272f, 0.860f, 0.672f
 
-typedef GLfloat vector3f[3];
+
+typedef GLdouble vector3lf[3];
+typedef GLfloat  vector3f[3];
 
 static volatile bool polygon_high = true;
 static volatile bool spotlight_on = true;
 static volatile bool smooth_shade = true;
 
-static volatile vector3f cam_pos = { 0.0f, HEIGHT_CAMERA, RADIUS_CAMERA };
-static volatile GLfloat cam_angle = 0.0f;
+static volatile vector3lf cam_pos = { 0.0f, HEIGHT_CAMERA, RADIUS_CAMERA };
+static volatile GLdouble cam_angle = 0.0f;
 
 
 // ---------------------- MENU IMPLEMENTATION (BEGIN) ---------------------- //
@@ -109,8 +111,8 @@ void main_menu(int op_id)
 
 void display(void)
 {
-	// Projection box side half-length
-	static const GLdouble b = 15.0;
+	// Projection cube's half-length of edge
+	static const GLdouble b = 12.0;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -176,25 +178,25 @@ void display(void)
 
 void special_key_handler(int key, int x, int y)
 {
-	static GLfloat angle_rad = 0.0f;
+	static GLdouble angle_rad = 0.0f;
 
 	if (key == GLUT_KEY_RIGHT) {
 		// Rotate camera towards positive direction by some deg @y axis
 		cam_angle += ROTATION_STEP;
-		if (cam_angle >= 360.0f) {
-			cam_angle -= 360.0f;
+		if (cam_angle >= 360.0) {
+			cam_angle -= 360.0;
 		}
 	}
 	else if (key == GLUT_KEY_LEFT) {
 		// Rotate camera towards negative direction by some deg @y axis
 		cam_angle -= ROTATION_STEP;
-		if (cam_angle <= 0.0f) {
-			cam_angle += 360.0f;
+		if (cam_angle <= 0.0) {
+			cam_angle += 360.0;
 		}
 	}
 	else return;
 
-	angle_rad = cam_angle * M_PI / 180.0f;
+	angle_rad = cam_angle * M_PI / 180.0;
 
 	cam_pos[0] = RADIUS_CAMERA * sin(angle_rad);
 	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad);
