@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include <GL/glut.h>
 
-#define WIDTH  700
-#define HEIGHT 700
+#define WINDOW_WIDTH  700
+#define WINDOW_HEIGHT 700
 
 #define EAST_WALL	1
 #define SOUTH_WALL	2
@@ -15,6 +15,9 @@
 static volatile bool polygon_high = true;
 static volatile bool spotlight_on = true;
 static volatile bool smooth_shade = true;
+
+static const int HEIGHT_CAMERA = 5;
+static const int RADIUS_CAMERA = 6;
 
 
 // ---------------------- MENU IMPLEMENTATION (BEGIN) ---------------------- //
@@ -140,6 +143,16 @@ void display(void)
 	glutSwapBuffers();
 }
 
+void special_key_handler(int key, int x, int y)
+{
+	if (key == GLUT_KEY_RIGHT) {
+		// Rotate camera towards positive direction @y axis
+	}
+	else if (key == GLUT_KEY_LEFT) {
+		// Rotate camera towards negative direction @y axis
+	}
+}
+
 void init_lists(void)
 {
 	// East wall of the house
@@ -208,7 +221,7 @@ int main(int argc, char* argv[])
 	// Window Creation
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(WIDTH, HEIGHT);
+	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutInitWindowPosition(0, 0);
 	glutCreateWindow("Project 3 - Farm House (AEM1: 3713, AEM2: 3938");
 
@@ -246,6 +259,7 @@ int main(int argc, char* argv[])
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 	// ---------------------- MENU CREATION (END) ---------------------- //
 
+	glutSpecialFunc(special_key_handler);
 	glutDisplayFunc(display);
 
 	// ...
