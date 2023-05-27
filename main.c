@@ -9,10 +9,10 @@
 #define WINDOW_WIDTH  500
 #define WINDOW_HEIGHT 500
 
-#define EAST_WALL	0b001
-#define SOUTH_WALL	0b010
-#define EAST_ROOF	0b011
-#define SOUTH_ROOF	0b100
+#define EAST_WALL   0b001
+#define SOUTH_WALL  0b010
+#define EAST_ROOF   0b011
+#define SOUTH_ROOF  0b100
 #define GROUND      0b101
 
 #define HEIGHT_CAMERA 40.0
