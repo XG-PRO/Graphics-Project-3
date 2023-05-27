@@ -6,8 +6,8 @@
 #include <stdbool.h>
 #include <GL/glut.h>
 
-#define WINDOW_WIDTH  700
-#define WINDOW_HEIGHT 700
+#define WINDOW_WIDTH  800
+#define WINDOW_HEIGHT 800
 
 #define EAST_WALL	0b001
 #define SOUTH_WALL	0b010
