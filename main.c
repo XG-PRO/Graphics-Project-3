@@ -34,8 +34,8 @@ static volatile bool polygon_high = true;
 static volatile bool spotlight_on = true;
 static volatile bool smooth_shade = true;
 
-static volatile vector3lf cam_pos = { 0.0f, HEIGHT_CAMERA, RADIUS_CAMERA };
-static volatile GLdouble cam_angle = 0.0f;
+static volatile vector3lf cam_pos = { 0.0, HEIGHT_CAMERA, RADIUS_CAMERA };
+static volatile GLdouble cam_angle = 0.0;
 
 
 // ---------------------- MENU IMPLEMENTATION (BEGIN) ---------------------- //
