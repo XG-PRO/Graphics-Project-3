@@ -130,9 +130,10 @@ void display(void)
 	glPushMatrix();
 
 	glColor3f(RED);
+	// EAST wall
 	glCallList(EAST_WALL);
 
-	// West wall constructed by rotating the East wall by 180 deg @y axis
+	// WEST wall constructed by rotating the East wall by 180 deg @y axis
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 	glColor3f(ORANGE);
 	glCallList(EAST_WALL);
@@ -141,9 +142,10 @@ void display(void)
 	glPushMatrix();
 
 	glColor3f(YELLOW);
+	// South wall
 	glCallList(SOUTH_WALL);
 
-	// North wall constructed by rotating the South wall by 180 deg @y axis
+	// NORTH wall constructed by rotating the South wall by 180 deg @y axis
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 	glColor3f(CYAN);
 	glCallList(SOUTH_WALL);
@@ -152,9 +154,10 @@ void display(void)
 	glPushMatrix();
 
 	glColor3f(FOREST);
+	// EAST roof
 	glCallList(EAST_ROOF);
 
-	// West roof constructed by rotation the East roof by 180 deg @y axis
+	// WEST roof constructed by rotation the East roof by 180 deg @y axis
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 	glColor3f(GREEN);
 	glCallList(EAST_ROOF);
@@ -163,9 +166,10 @@ void display(void)
 	glPushMatrix();
 
 	glColor3f(BLUE);
+	// SOUTH roof
 	glCallList(SOUTH_ROOF);
 
-	// North roof constructed by rotation the South roof by 180 deg @y axis
+	// NORTH roof constructed by rotation the South roof by 180 deg @y axis
 	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 	glColor3f(PURPLE);
 	glCallList(SOUTH_ROOF);
