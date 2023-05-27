@@ -29,6 +29,8 @@
 #define ORANGE  1.000f, 0.400f, 0.000f
 #define FOREST  0.272f, 0.860f, 0.672f
 
+#define SQRT_75_PLUS_5 13.660254037844387
+
 
 typedef GLdouble vector3lf[3];
 typedef GLfloat  vector3f[3];
@@ -112,7 +114,7 @@ void main_menu(int op_id)
 void display(void)
 {
 	// Projection cube's half-length of edge
-	static const GLdouble b = 10.0;
+	static const GLdouble b = 50.0;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -215,10 +217,10 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-1.0f, 0.0f, 2.0f);
-			glVertex3f(-1.0f, 2.0f, 2.0f);
-			glVertex3f(-1.0f, 2.0f, -2.0f);
-			glVertex3f(-1.0f, 0.0f, -2.0f);
+			glVertex3f(-5.0f, -5.0f, 10.0f);
+			glVertex3f(-5.0f, 5.0f, 10.0f);
+			glVertex3f(-5.0f, 5.0f, -10.0f);
+			glVertex3f(-5.0f, -5.0f, -10.0f);
 		}
 		glEnd();
 	}
@@ -229,10 +231,10 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-1.0f, 0.0f, 2.0f);
-			glVertex3f(-1.0f, 2.0f, 2.0f);
-			glVertex3f(1.0f, 2.0f, 2.0f);
-			glVertex3f(1.0f, 0.0f, 2.0f);
+			glVertex3f(-5.0f, -5.0f, 10.0f);
+			glVertex3f(-5.0f, 5.0f, 10.0f);
+			glVertex3f(5.0f, 5.0f, 10.0f);
+			glVertex3f(5.0f, -5.0f, 10.0f);
 		}
 		glEnd();
 	}
@@ -243,23 +245,23 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-1.0f, 2.0f, 2.0f);
-			glVertex3f(0.0f, 4.0f, 2.0f);
-			glVertex3f(0.0f, 4.0f, -2.0f);
-			glVertex3f(-1.0f, 2.0f, -2.0f);
+			glVertex3f(-5.0f, 5.0f, 10.0f);
+			glVertex3f(-5.0f, 5.0f, -10.0f);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_5, -10.0f);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_5, 10.0f);
 		}
 		glEnd();
 	}
 	glEndList();
 
-	// East roof of the house
+	// South roof of the house
 	glNewList(SOUTH_ROOF, GL_COMPILE);
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-1.0f, 2.0f, 2.0f);
-			glVertex3f(1.0f, 2.0f, 2.0f);
-			glVertex3f(0.0f, 4.0f, 2.0f);
+			glVertex3f(-5.0f, 5.0f, 10.0f);
+			glVertex3f(5.0f, 5.0f, 10.0f);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_5, 10.0f);
 		}
 		glEnd();
 	}
