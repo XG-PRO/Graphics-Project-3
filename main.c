@@ -112,7 +112,7 @@ void main_menu(int op_id)
 void display(void)
 {
 	// Projection cube's half-length of edge
-	static const GLdouble b = 12.0;
+	static const GLdouble b = 10.0;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
