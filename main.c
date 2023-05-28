@@ -174,7 +174,6 @@ void display(void)
 
 	glCallList(GROUND);
 	
-
 	glutSwapBuffers();
 }
 
@@ -182,14 +181,14 @@ void special_key_handler(int key, int x, int y)
 {
 	static GLdouble angle_rad = 0.0f;
 
-	if (key == GLUT_KEY_RIGHT) {
+	if (key == GLUT_KEY_LEFT) {
 		// Rotate camera towards positive direction by some deg @y axis
 		cam_angle += ROTATION_STEP;
 		if (cam_angle >= 360.0) {
 			cam_angle -= 360.0;
 		}
 	}
-	else if (key == GLUT_KEY_LEFT) {
+	else if (key == GLUT_KEY_RIGHT) {
 		// Rotate camera towards negative direction by some deg @y axis
 		cam_angle -= ROTATION_STEP;
 		if (cam_angle <= 0.0) {
