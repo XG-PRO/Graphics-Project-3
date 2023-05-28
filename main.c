@@ -6,8 +6,8 @@
 #include <stdbool.h>
 #include <GL/glut.h>
 
-#define WINDOW_WIDTH  500
-#define WINDOW_HEIGHT 500
+#define WINDOW_WIDTH  800
+#define WINDOW_HEIGHT 800
 
 #define EAST_WALL   0b001
 #define SOUTH_WALL  0b010
@@ -17,8 +17,6 @@
 
 #define HEIGHT_CAMERA 40.0
 #define RADIUS_CAMERA 70.0
-
-#define ROTATION_STEP 3.0
 
 #define GRASS   0.00000000f, 0.6039216f, 0.09019608f
 #define BROWN   0.36078432f, 0.2509804f, 0.20000000f
@@ -108,7 +106,6 @@ void main_menu(int op_id)
 
 void build_house(void)
 {
-	// ------------------- HOUSE CONSTRUCTION (BEGIN) -------------------
 	glPushMatrix();
 
 	glColor3f(BROWN);
@@ -151,7 +148,6 @@ void build_house(void)
 	glCallList(SOUTH_ROOF);
 
 	glPopMatrix();
-	// ------------------- HOUSE CONSTRUCTION (END) -------------------
 }
 
 void display(void)
@@ -180,6 +176,7 @@ void display(void)
 void special_key_handler(int key, int x, int y)
 {
 	static GLdouble angle_rad = 0.0f;
+	static const GLdouble ROTATION_STEP = 3.0;
 
 	if (key == GLUT_KEY_LEFT) {
 		// Rotate camera towards positive direction by some deg @y axis
