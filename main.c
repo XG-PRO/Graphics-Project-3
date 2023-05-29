@@ -32,8 +32,23 @@ static volatile bool polygon_high = true;
 static volatile bool spotlight_on = true;
 static volatile bool smooth_shade = true;
 
+static GLint subdivision_count = 4;
+
 static volatile vector3lf cam_pos = { 0.0, HEIGHT_CAMERA, RADIUS_CAMERA };
 static volatile GLdouble cam_angle = 0.0;
+
+typedef float point3[4];
+
+//Sun Light and Materials
+static GLfloat sunlight = 0.3;
+static GLfloat sunEmissionMaterial[] = { 0.5, 0.5, 0.0, 1.0 };
+static GLfloat diffuse_sun[] = { 0.3, 0.3, 0.3, 0.0 };
+static GLfloat ambient_sun[] = { 0.3, 0.3, 0.3, 0.0 };
+static GLfloat spec_sun[] = { 0.3, 0.3, 0.3, 1.0 };
+static GLfloat position_sun[] = { 1.0, 0.0, 0.0, 0.0 };
+static GLfloat direction_sun[] = { 0.0, 0.0, 0.0, 0.0 };
+static GLfloat sun_angle = 0.0;
+
 
 
 // ---------------------- MENU IMPLEMENTATION (BEGIN) ---------------------- //
@@ -103,6 +118,136 @@ void main_menu(int op_id)
 }
 // ---------------------- MENU IMPLEMENTATION (END) ---------------------- //
 
+// ---------------------- SUN IMPLEMENTATION (START) --------------------- //
+
+//Normalization of a given point preserving signage
+void normal(point3 p) {
+	float d = 0.0;
+	int i;
+	for (i = 0; i < 3; i++) 
+	{
+		d += p[i] * p[i];
+	}
+	d = sqrt(d);
+	for (i = 0; i < 3; i++) 
+	{
+		p[i] /= d;
+	}
+}
+
+//Recursive sibdivision of a triangle into 4 equilateral triangles
+void divide_triangle(point3 a, point3 b, point3 c, int m)
+{
+	point3 v1, v2, v3;
+	int j;
+
+	//Subdivide current triangle
+	if (m > 0)
+	{
+		// Subdivide the triangle into 2 equal parts
+		// v1,v2,v3 are the new points created by this subdivision which will form 4 new triangles
+		// Normalize these new points so that they move onto the unit sphere
+		for (j = 0; j < 3; j++)
+		{
+			v1[j] = a[j] + b[j];
+		}
+		normal(v1);
+		for (j = 0; j < 3; j++)
+		{
+			v2[j] = a[j] + c[j];
+		}
+		normal(v2);
+		for (j = 0; j < 3; j++) {
+			v3[j] = b[j] + c[j];
+		}
+		normal(v3);
+
+		//Form said 4 new triangles with the new points and continue recursive subdivision
+		divide_triangle(a, v1, v2, m - 1);
+		divide_triangle(c, v2, v3, m - 1);
+		divide_triangle(b, v3, v1, m - 1);
+		divide_triangle(v1, v3, v2, m - 1);
+	}
+
+	//Draw final points as polygons onto the unit sphere
+	else 
+	{
+		glBegin(GL_POLYGON);
+			glNormal3fv(a);
+			glVertex3fv(a);
+			glNormal3fv(b);
+			glVertex3fv(b);
+			glNormal3fv(c);
+			glVertex3fv(c);
+		glEnd();
+	}
+}
+
+//Tetrahedron creation and subdivision initiation
+void tetrahedron(int m) {
+	//Starting values for the tetrahedron
+	point3 v[] = { {0.0, 0.0, 1.0}, {0.0, 0.942809, -0.33333}, {-0.816497, -0.471405, -0.333333}, {0.816497, -0.471405, -0.333333} };
+
+	//Take the points of the tetrahedron and divide it into 4 triangles
+	//Initiate subdivision on each one of them
+	divide_triangle(v[0], v[1], v[2], m);	//First Triangle
+	divide_triangle(v[3], v[2], v[1], m);	//Second Triangle
+	divide_triangle(v[0], v[3], v[1], m);	//Third Triangle
+	divide_triangle(v[0], v[2], v[3], m);	//Fourth Triangle
+}
+
+//Update the sun light's color and intensity
+void update_sunlight() {
+
+	//Sun rotates backwards
+	//Start increasing the intensity until the sun reaches the top of the plane
+	//Start decreasing the intensity after the sun reaches the top of the plane
+	if (sun_angle > -90)
+		sunlight += 0.7 / 90;
+	else
+		sunlight -= 0.7 / 90;
+
+	//Update light respectively
+	for (int i = 0; i < 3; i++)
+	{
+		diffuse_sun[i] = sunlight;
+		ambient_sun[i] = sunlight;
+	}
+
+}
+
+void build_sun() {
+
+	//Update light attributes
+	update_sunlight();
+
+
+	glPushMatrix();
+		//Create sun's materials for color and light
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, sunEmissionMaterial);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_sun);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, sunEmissionMaterial);
+
+		//Rotate sun on the plane so it resemples dawn and dusk
+		glRotated(sun_angle, 0.0, 0.0, 1.0);
+		glTranslatef(-50.0, 0.0, 0.0);
+
+		//Create sun's light as a directional spotlight
+		glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
+		glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
+		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction_sun);
+
+		//Create sun's polygons
+		tetrahedron(subdivision_count);
+
+	glPopMatrix();
+
+}
+
+// ----------------------- SUN IMPLEMENTATION (END) ---------------------- //
 
 void build_house(void)
 {
@@ -166,11 +311,22 @@ void display(void)
 
 	build_house();
 
+	build_sun();
+
 	glColor3f(GRASS);
 
 	glCallList(GROUND);
 	
 	glutSwapBuffers();
+}
+
+void idle()
+{
+	sun_angle -= 1;
+	if (sun_angle == -180)
+		sun_angle = 0;
+
+	glutPostRedisplay();
 }
 
 void special_key_handler(int key, int x, int y)
@@ -291,6 +447,10 @@ int main(int argc, char* argv[])
 	// Attributes
 	glEnable(GL_DEPTH_TEST);				// Depth Buffer
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// Black Background
+	glEnable(GL_LIGHTING);					// Lighting
+	glEnable(GL_LIGHT0);					// Light Source
+	glEnable(GL_NORMALIZE);					// Normals Preservation for units
+	glShadeModel(GL_SMOOTH);				// Smooth Shading Model
 
 	// Pre-compiled lists initialization
 	init_lists();
@@ -324,7 +484,7 @@ int main(int argc, char* argv[])
 
 	glutSpecialFunc(special_key_handler);
 	glutDisplayFunc(display);
-
+	glutIdleFunc(idle);
 	// ...
 
 	glutMainLoop();
