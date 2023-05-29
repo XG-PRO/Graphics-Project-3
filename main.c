@@ -1,3 +1,5 @@
+#pragma warning(disable: 4305)
+
 #define _USE_MATH_DEFINES
 
 #include <math.h>
@@ -25,16 +27,13 @@
 #define SQRT_75_PLUS_10 18.66025403784439
 
 
-typedef GLdouble vector3lf[3];
-typedef GLfloat  vector3f[3];
-
 static volatile bool polygon_high = true;
 static volatile bool spotlight_on = true;
 static volatile bool smooth_shade = true;
 
 static GLint subdivision_count = 4;
 
-static volatile vector3lf cam_pos = { 0.0, HEIGHT_CAMERA, RADIUS_CAMERA };
+static volatile GLdouble cam_pos[] = {0.0, HEIGHT_CAMERA, RADIUS_CAMERA};
 static volatile GLdouble cam_angle = 0.0;
 
 typedef float point3[4];
@@ -237,7 +236,7 @@ void tetrahedron(int m) {
 }
 
 //Update the sun light's color and intensity
-void update_sunlight() {
+void update_sunlight(void) {
 
 	//Sun rotates backwards
 	//Start increasing the intensity until the sun reaches the top of the plane
@@ -256,7 +255,7 @@ void update_sunlight() {
 
 }
 
-void build_sun() {
+void build_sun(void) {
 
 	//Update light attributes
 	update_sunlight();
@@ -374,7 +373,7 @@ void build_grass(void)
 
 // ------------------- SPOTLIGHT IMPLEMENTATION (START) ------------------ //
 
-void spotlight()
+void spotlight(void)
 {
 
 	glEnable(GL_LIGHT1);
@@ -420,7 +419,7 @@ void display(void)
 	glutSwapBuffers();
 }
 
-void idle()
+void idle(void)
 {
 	// Update the sun's rotational angle but backwards to resemple correct day transition
 	sun_angle -= 0.5;
@@ -430,11 +429,22 @@ void idle()
 	glutPostRedisplay();
 }
 
+/*	
+*	The camera/observer moves on a circle with its center located 
+*	on the Y axis, 40 units above the ground (directly above the 
+*	house). The circle has a distance of 70 units, thus:
+*		C: x^2 + z^2 = 70^2, y = 40
+*	Parametric expression:
+*		- C: [x(a)]^2 + [z(a)]^2 = 70^2, y = 40
+*		- x(a) = r * sin(a)
+*		- z(a) = r * cos(a)
+*/
 void special_key_handler(int key, int x, int y)
 {
 	static GLdouble angle_rad = 0.0f;
 	static const GLdouble ROTATION_STEP = 3.0;
 
+	// RIGHT and LEFT keys change the value of the angle, a.
 	if (key == GLUT_KEY_LEFT) {
 		// Rotate camera towards positive direction by some deg @y axis
 		cam_angle += ROTATION_STEP;
@@ -453,8 +463,8 @@ void special_key_handler(int key, int x, int y)
 
 	angle_rad = cam_angle * M_PI / 180.0;
 
-	cam_pos[0] = RADIUS_CAMERA * sin(angle_rad);
-	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad);
+	cam_pos[0] = RADIUS_CAMERA * sin(angle_rad);	// x(a)
+	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad);	// z(a)
 
 	glutPostRedisplay();
 }
@@ -531,33 +541,13 @@ void init_lists(void)
 	glEndList();
 }
 
-int main(int argc, char* argv[])
+static int main_menu_id;
+static int polygon_submenu_id;
+static int spotlight_submenu_id;
+static int shade_submenu_id;
+
+int create_menu(void)
 {
-	int main_menu_id;
-	int polygon_submenu_id;
-	int spotlight_submenu_id;
-	int shade_submenu_id;
-
-	// Window Creation
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-	glutInitWindowPosition(0, 0);
-	glutCreateWindow("Project 3 - Farm House (AEM1: 3713, AEM2: 3938");
-
-	// Attributes
-	glEnable(GL_DEPTH_TEST);				// Depth Buffer
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// Black Background
-	glEnable(GL_LIGHTING);					// Lighting
-	glEnable(GL_LIGHT0);					// Light Source
-	//glEnable(GL_NORMALIZE);					// Normals Preservation for units
-	//glEnable(GL_COLOR_MATERIAL);			// Make glColorf() as Material
-	glShadeModel(GL_SMOOTH);				// Smooth Shading Model
-
-	// Pre-compiled lists initialization
-	init_lists();
-
-	// ---------------------- MENU CREATION (BEGIN) ---------------------- //
 	polygon_submenu_id = glutCreateMenu(polygon_submenu);
 	{
 		glutAddMenuEntry("Low", 1);
@@ -582,12 +572,39 @@ int main(int argc, char* argv[])
 		glutAddMenuEntry("Exit", 7);
 	}
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
-	// ---------------------- MENU CREATION (END) ---------------------- //
+}
+
+int main(int argc, char* argv[])
+{
+	// Window Creation
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+	glutInitWindowPosition(0, 0);
+	glutCreateWindow("Project 3 - Farm House (AEM1: 3713, AEM2: 3938");
+
+	// Attributes
+	glEnable(GL_DEPTH_TEST);				// Depth Buffer
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// Black Background
+	glEnable(GL_LIGHTING);					// Lighting
+	glEnable(GL_LIGHT0);					// Light Source
+	//glEnable(GL_NORMALIZE);					// Normals Preservation for units
+	//glEnable(GL_COLOR_MATERIAL);			// Make glColorf() as Material
+	glShadeModel(GL_SMOOTH);				// Smooth Shading Model
+
+	// Pre-compiled lists initialization
+	init_lists();
+
+	// Window menu (4 options)
+	create_menu();
+
+	// ----------- CALLBACK FUNCTIONS (BEGIN) ----------- //
 
 	glutSpecialFunc(special_key_handler);
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
-	// ...
+
+	// ----------- CALLBACK FUNCTIONS (END) ----------- //
 
 	glutMainLoop();
 
