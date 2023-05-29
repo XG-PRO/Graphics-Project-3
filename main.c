@@ -39,14 +39,21 @@ static volatile GLdouble cam_angle = 0.0;
 
 typedef float point3[4];
 
+//LIGHT EXPLANATION
+//position(x,y,z,w), x,y,z indicate starting poisiton of the light relative to the modelview matrix, 
+// w indicates whether the light is a near light source (1) or a far away light source (0)
+//direction(x,y,z,c), x,y,z indicate the position the light source points at in homogeneous object coordinates
+//diffusion(r,g,b,a), ambient(r,g,b,a), specular(r,g,b,a) all indicate their respective light attribute
+//	with r,g,b,a being the normalized RGBA values for the source from -1.0 to 1.0
+
 //Sun Light and Materials
-static GLfloat sunlight = 0.3;
+static GLfloat sunlight = 0.0;
 static GLfloat sunEmissionMaterial[] = { 0.5, 0.5, 0.0, 1.0 };
 static GLfloat diffuse_sun[] = { 0.3, 0.3, 0.3, 0.0 };
 static GLfloat ambient_sun[] = { 0.3, 0.3, 0.3, 0.0 };
 static GLfloat spec_sun[] = { 0.3, 0.3, 0.3, 1.0 };
-static GLfloat position_sun[] = { 1.0, 0.0, 0.0, 0.0 };
-static GLfloat direction_sun[] = { 0.0, 0.0, 0.0, 0.0 };
+static GLfloat position_sun[] = { 0.0, 0.0, 0.0, 1.0 };
+static GLfloat direction_sun[] = { 0.0, 0.0, 0.0 };
 static GLfloat sun_angle = 0.0;
 
 
@@ -186,7 +193,11 @@ void divide_triangle(point3 a, point3 b, point3 c, int m)
 //Tetrahedron creation and subdivision initiation
 void tetrahedron(int m) {
 	//Starting values for the tetrahedron
+	//These values are inverted so the sun moves opposite to its light source
 	point3 v[] = { {0.0, 0.0, 1.0}, {0.0, 0.942809, -0.33333}, {-0.816497, -0.471405, -0.333333}, {0.816497, -0.471405, -0.333333} };
+	int i;
+	for (i = 0; i < 3; i++)
+		position_sun[i] = (v[0][i] + v[1][i] + v[2][i] + v[3][i]) / 4;
 
 	//Take the points of the tetrahedron and divide it into 4 triangles
 	//Initiate subdivision on each one of them
@@ -203,9 +214,9 @@ void update_sunlight() {
 	//Start increasing the intensity until the sun reaches the top of the plane
 	//Start decreasing the intensity after the sun reaches the top of the plane
 	if (sun_angle > -90)
-		sunlight += 0.7 / 90;
+		sunlight += 1.0 / 90;
 	else
-		sunlight -= 0.7 / 90;
+		sunlight -= 1.0 / 90;
 
 	//Update light respectively
 	for (int i = 0; i < 3; i++)
@@ -228,17 +239,18 @@ void build_sun() {
 		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_sun);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, sunEmissionMaterial);
+
 
 		//Rotate sun on the plane so it resemples dawn and dusk
 		glRotated(sun_angle, 0.0, 0.0, 1.0);
-		glTranslatef(-50.0, 0.0, 0.0);
+		glTranslatef(50.0, 0.0, 0.0);
 
 		//Create sun's light as a directional spotlight
 		glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
+		//glLightfv(GL_LIGHT0, GL_AMBIENT, ambient_sun);
 		glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
-		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction_sun);
+		//glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction_sun);
 
 		//Create sun's polygons
 		tetrahedron(subdivision_count);
@@ -322,7 +334,8 @@ void display(void)
 
 void idle()
 {
-	sun_angle -= 1;
+	// Update the sun's rotational angle but backwards to resemple correct day transition
+	sun_angle -= 0.5;
 	if (sun_angle == -180)
 		sun_angle = 0;
 
@@ -449,7 +462,8 @@ int main(int argc, char* argv[])
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// Black Background
 	glEnable(GL_LIGHTING);					// Lighting
 	glEnable(GL_LIGHT0);					// Light Source
-	glEnable(GL_NORMALIZE);					// Normals Preservation for units
+	//glEnable(GL_NORMALIZE);					// Normals Preservation for units
+	glEnable(GL_COLOR_MATERIAL);			// Make glColorf() as Material
 	glShadeModel(GL_SMOOTH);				// Smooth Shading Model
 
 	// Pre-compiled lists initialization
