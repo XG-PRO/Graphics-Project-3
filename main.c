@@ -45,16 +45,45 @@ typedef float point3[4];
 //direction(x,y,z,c), x,y,z indicate the position the light source points at in homogeneous object coordinates
 //diffusion(r,g,b,a), ambient(r,g,b,a), specular(r,g,b,a) all indicate their respective light attribute
 //	with r,g,b,a being the normalized RGBA values for the source from -1.0 to 1.0
+//
+//kateuthintiki = specular
+//diaxiti = diffuse
+//periballontos fotos = ambient
 
 //Sun Light and Materials
-static GLfloat sunlight = 0.0;
+static GLfloat sunlight = 0.3;
 static GLfloat sunEmissionMaterial[] = { 0.5, 0.5, 0.0, 1.0 };
-static GLfloat diffuse_sun[] = { 0.3, 0.3, 0.3, 0.0 };
-static GLfloat ambient_sun[] = { 0.3, 0.3, 0.3, 0.0 };
+static GLfloat diffuse_sun[] = { 0.3, 0.3, 0.3, 1.0 };
+static GLfloat ambient_sun[] = { 1.0, 1.0, 0.0, 1.0 };
 static GLfloat spec_sun[] = { 0.3, 0.3, 0.3, 1.0 };
 static GLfloat position_sun[] = { 0.0, 0.0, 0.0, 1.0 };
 static GLfloat direction_sun[] = { 0.0, 0.0, 0.0 };
 static GLfloat sun_angle = 0.0;
+
+//House Materials
+
+static GLfloat diffuse_house[] = { 0.2, 0.1, 0.1, 1.0 };
+static GLfloat ambient_house[] = { 0.2, 0.0, 0.0, 1.0 };
+static GLfloat spec_house[] = { 0.0, 0.0, 0.0, 1.0 };	//Matte surface
+
+static GLfloat diffuse_roof[] = { 0.0, 0.0, 0.0, 1.0 };
+static GLfloat ambient_roof[] = { 0.0, 0.0, 0.0, 1.0 };
+static GLfloat spec_roof[] = { 1.0, 1.0, 1.0, 1.0 };	//Metallic surface
+
+//Grass Materials
+
+static GLfloat diffuse_grass[] = { 0.3, 1, 0.3, 0.3 };
+static GLfloat ambient_grass[] = { 0.3, 1, 0.3, 0.0 };
+static GLfloat spec_grass[] = { 0.0, 0.0, 0.0, 0.0 };	//Matte surface
+
+//Spotlight Light
+
+static GLfloat diffuse_spotlight[] = { 1.0 , 1.0, 1.0, 1.0 };
+static GLfloat ambient_spotlight[] = { 1.0, 1.0, 1.0, 1.0 };
+static GLfloat spec_spotlight[] = { 1.0, 1.0, 1.0, 1.0 };
+static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f, 1.0 };
+static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, -10.0f, 1.0 };
+
 
 
 
@@ -214,15 +243,15 @@ void update_sunlight() {
 	//Start increasing the intensity until the sun reaches the top of the plane
 	//Start decreasing the intensity after the sun reaches the top of the plane
 	if (sun_angle > -90)
-		sunlight += 1.0 / 90;
+		sunlight += 0.7 / 90;
 	else
-		sunlight -= 1.0 / 90;
+		sunlight -= 0.7 / 90;
 
 	//Update light respectively
 	for (int i = 0; i < 3; i++)
 	{
 		diffuse_sun[i] = sunlight;
-		ambient_sun[i] = sunlight;
+		spec_sun[i] = sunlight;
 	}
 
 }
@@ -237,20 +266,20 @@ void build_sun() {
 		//Create sun's materials for color and light
 		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, sunEmissionMaterial);
 		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_sun);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
+		//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_sun);
+		//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
+		//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_sun);
 
-
-		//Rotate sun on the plane so it resemples dawn and dusk
-		glRotated(sun_angle, 0.0, 0.0, 1.0);
-		glTranslatef(50.0, 0.0, 0.0);
 
 		//Create sun's light as a directional spotlight
 		glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
-		//glLightfv(GL_LIGHT0, GL_AMBIENT, ambient_sun);
 		glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
-		//glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction_sun);
+
+
+		//Rotate sun on the plane so it resemples dawn and dusk
+		glRotated(sun_angle, 0.0, 0.0, 1.0);
+		glTranslatef(-50.0, 0.0, 0.0);
 
 		//Create sun's polygons
 		tetrahedron(subdivision_count);
@@ -261,51 +290,103 @@ void build_sun() {
 
 // ----------------------- SUN IMPLEMENTATION (END) ---------------------- //
 
+// --------------------- HOUSE IMPLEMENTATION (START) -------------------- //
+
 void build_house(void)
 {
 	glPushMatrix();
 
-	glColor3f(BROWN);
-	// EAST wall
-	glCallList(EAST_WALL);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_house);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_house);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_house);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
 
-	// WEST wall constructed by rotating the East wall by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glCallList(EAST_WALL);
+		glPushMatrix();
 
+
+			//glColor3f(BROWN);
+			// EAST wall
+			glCallList(EAST_WALL);
+
+			// WEST wall constructed by rotating the East wall by 180 deg @y axis
+			glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+			glCallList(EAST_WALL);
+
+		glPopMatrix();
+		glPushMatrix();
+
+			// South wall
+			glCallList(SOUTH_WALL);
+
+			// NORTH wall constructed by rotating the South wall by 180 deg @y axis
+			glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+			glCallList(SOUTH_WALL);
+
+		glPopMatrix();
 	glPopMatrix();
+
 	glPushMatrix();
 
-	// South wall
-	glCallList(SOUTH_WALL);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_roof);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_roof);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_roof);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0);;
 
-	// NORTH wall constructed by rotating the South wall by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glCallList(SOUTH_WALL);
+		glPushMatrix();
 
-	glPopMatrix();
-	glPushMatrix();
+			//glColor3f(GRAY);
+			// EAST roof
+			glCallList(EAST_ROOF);
 
-	glColor3f(GRAY);
-	// EAST roof
-	glCallList(EAST_ROOF);
+			// WEST roof constructed by rotation the East roof by 180 deg @y axis
+			glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+			glCallList(EAST_ROOF);
 
-	// WEST roof constructed by rotation the East roof by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glCallList(EAST_ROOF);
+		glPopMatrix();
+		glPushMatrix();
 
-	glPopMatrix();
-	glPushMatrix();
+			// SOUTH roof
+			glCallList(SOUTH_ROOF);
 
-	// SOUTH roof
-	glCallList(SOUTH_ROOF);
+			// NORTH roof constructed by rotation the South roof by 180 deg @y axis
+			glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+			glCallList(SOUTH_ROOF);
 
-	// NORTH roof constructed by rotation the South roof by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glCallList(SOUTH_ROOF);
+		glPopMatrix();
 
 	glPopMatrix();
 }
+
+// ---------------------- HOUSE IMPLEMENTATION (END) --------------------- //
+
+// --------------------- GRASS IMPLEMENTATION (START) -------------------- //
+
+void build_grass(void)
+{
+	glColor3f(GRASS);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_grass);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_grass);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_grass);
+	glCallList(GROUND);
+}
+// ---------------------- GRASS IMPLEMENTATION (END) --------------------- //
+
+// ------------------- SPOTLIGHT IMPLEMENTATION (START) ------------------ //
+
+void spotlight()
+{
+
+	glEnable(GL_LIGHT1);
+	glLightfv(GL_LIGHT1, GL_POSITION, position_spotlight);
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction_spotlight);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse_spotlight);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient_spotlight);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, spec_spotlight);
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 30.0);
+	
+}
+// -------------------- SPOTLIGHT IMPLEMENTATION (END) ------------------- //
 
 void display(void)
 {
@@ -319,16 +400,23 @@ void display(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	glColor3f(1.0f, 1.0f, 1.0f);
+	//glColor3f(1.0f, 1.0f, 1.0f);
 
+	//House Creation
 	build_house();
 
+	//Sun Creation
 	build_sun();
 
-	glColor3f(GRASS);
-
-	glCallList(GROUND);
+	//Grass Creation
+	build_grass();
 	
+	//Spotlight Creation
+	if (spotlight_on)
+		spotlight();
+	else
+		glDisable(GL_LIGHT1);
+
 	glutSwapBuffers();
 }
 
@@ -463,7 +551,7 @@ int main(int argc, char* argv[])
 	glEnable(GL_LIGHTING);					// Lighting
 	glEnable(GL_LIGHT0);					// Light Source
 	//glEnable(GL_NORMALIZE);					// Normals Preservation for units
-	glEnable(GL_COLOR_MATERIAL);			// Make glColorf() as Material
+	//glEnable(GL_COLOR_MATERIAL);			// Make glColorf() as Material
 	glShadeModel(GL_SMOOTH);				// Smooth Shading Model
 
 	// Pre-compiled lists initialization
