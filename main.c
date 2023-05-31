@@ -33,6 +33,16 @@ volatile bool polygon_high = true;
 volatile bool spotlight_on = true;
 volatile bool smooth_shade = true;
 
+static int main_menu_id;
+static int polygon_submenu_id;
+static int spotlight_submenu_id;
+static int shade_submenu_id;
+
+extern void polygon_submenu(int);
+extern void spotlight_submenu(int);
+extern void shade_submenu(int);
+extern void main_menu(int);
+
 static GLint subdivision_count = 4;
 
 static volatile GLdouble cam_pos[] = {0.0, HEIGHT_CAMERA, RADIUS_CAMERA};
@@ -479,16 +489,6 @@ void init_lists(void)
 	}
 	glEndList();
 }
-
-static int main_menu_id;
-static int polygon_submenu_id;
-static int spotlight_submenu_id;
-static int shade_submenu_id;
-
-extern void polygon_submenu(int);
-extern void spotlight_submenu(int);
-extern void shade_submenu(int);
-extern void main_menu(int);
 
 int create_menu(void)
 {
