@@ -1,4 +1,6 @@
-#pragma warning(disable: 4305)
+// Implicit conversion from data type A to 
+// data type B is now forbidden >:D (sanest)
+#pragma warning(error: 4305)
 
 #define _USE_MATH_DEFINES
 
@@ -27,9 +29,9 @@
 #define SQRT_75_PLUS_10 18.66025403784439
 
 
-static volatile bool polygon_high = true;
-static volatile bool spotlight_on = true;
-static volatile bool smooth_shade = true;
+volatile bool polygon_high = true;
+volatile bool spotlight_on = true;
+volatile bool smooth_shade = true;
 
 static GLint subdivision_count = 4;
 
@@ -50,120 +52,52 @@ typedef float point3[4];
 //periballontos fotos = ambient
 
 //Sun Light and Materials
-static GLfloat sunlight = 0.3;
-static GLfloat sunEmissionMaterial[] = { 0.5, 0.5, 0.0, 1.0 };
-static GLfloat diffuse_sun[] = { 0.3, 0.3, 0.3, 1.0 };
-static GLfloat ambient_sun[] = { 1.0, 1.0, 0.0, 1.0 };
-static GLfloat spec_sun[] = { 0.3, 0.3, 0.3, 1.0 };
-static GLfloat position_sun[] = { 0.0, 0.0, 0.0, 1.0 };
-static GLfloat direction_sun[] = { 0.0, 0.0, 0.0 };
+static GLfloat sunlight = 0.3f;
+static GLfloat sunEmissionMaterial[] = { 0.5f, 0.5f, 0.0f, 1.0f };
+static GLfloat diffuse_sun[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+static GLfloat ambient_sun[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+static GLfloat spec_sun[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+static GLfloat position_sun[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static GLfloat direction_sun[] = { 0.0f, 0.0f, 0.0f };
 static GLfloat sun_angle = 0.0;
 
 //House Materials
 
-static GLfloat diffuse_house[] = { 0.2, 0.1, 0.1, 1.0 };
-static GLfloat ambient_house[] = { 0.2, 0.0, 0.0, 1.0 };
-static GLfloat spec_house[] = { 0.0, 0.0, 0.0, 1.0 };	//Matte surface
+static GLfloat diffuse_house[] = { 0.2f, 0.1f, 0.1f, 1.0f };
+static GLfloat ambient_house[] = { 0.2f, 0.0f, 0.0f, 1.0f };
+static GLfloat spec_house[] = { 0.0f, 0.0f, 0.0f, 1.0f };	//Matte surface
 
-static GLfloat diffuse_roof[] = { 0.0, 0.0, 0.0, 1.0 };
-static GLfloat ambient_roof[] = { 0.0, 0.0, 0.0, 1.0 };
-static GLfloat spec_roof[] = { 1.0, 1.0, 1.0, 1.0 };	//Metallic surface
+static GLfloat diffuse_roof[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static GLfloat ambient_roof[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static GLfloat spec_roof[] = { 1.0f, 1.0f, 1.0f, 1.0f };	//Metallic surface
 
 //Grass Materials
 
-static GLfloat diffuse_grass[] = { 0.3, 1, 0.3, 0.3 };
-static GLfloat ambient_grass[] = { 0.3, 1, 0.3, 0.0 };
-static GLfloat spec_grass[] = { 0.0, 0.0, 0.0, 0.0 };	//Matte surface
+static GLfloat diffuse_grass[] = { 0.3f, 1.0f, 0.3f, 0.3f };
+static GLfloat ambient_grass[] = { 0.3f, 1.0f, 0.3f, 0.0f };
+static GLfloat spec_grass[] = { 0.0f, 0.0f, 0.0f, 0.0f };	//Matte surface
 
 //Spotlight Light
 
-static GLfloat diffuse_spotlight[] = { 1.0 , 1.0, 1.0, 1.0 };
-static GLfloat ambient_spotlight[] = { 1.0, 1.0, 1.0, 1.0 };
-static GLfloat spec_spotlight[] = { 1.0, 1.0, 1.0, 1.0 };
-static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f, 1.0 };
-static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, -10.0f, 1.0 };
+static GLfloat diffuse_spotlight[] = { 1.0f , 1.0f, 1.0f, 1.0f };
+static GLfloat ambient_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+static GLfloat spec_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f, 1.0f };
+static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, -10.0f, 1.0f };
 
 
-
-
-// ---------------------- MENU IMPLEMENTATION (BEGIN) ---------------------- //
-// First Sub-menu
-void polygon_submenu(int op_id)
-{
-	switch (op_id)
-	{
-	case 1:
-		polygon_high = false;
-		printf("Polygon set to \"Low\"\n");
-		break;
-	case 2:
-		polygon_high = true;
-		printf("Polygon set to \"High\"\n");
-		break;
-	default:
-		fprintf(stderr, "Undefined Polygon Option\n");
-		break;
-	}
-}
-
-// Second Sub-menu
-void spotlight_submenu(int op_id)
-{
-	switch (op_id)
-	{
-	case 3:
-		spotlight_on = true;
-		printf("Spotlight enabled\n");
-		break;
-	case 4:
-		spotlight_on = false;
-		printf("Spotlight disabled\n");
-		break;
-	default:
-		fprintf(stderr, "Undefined Spotlight Option\n");
-		break;
-	}
-}
-
-// Third Sub-menu
-void shade_submenu(int op_id)
-{
-	switch (op_id)
-	{
-	case 5:
-		smooth_shade = true;
-		printf("Smooth Shading enabled\n");
-		break;
-	case 6:
-		smooth_shade = false;
-		printf("Smooth Shading disabled\n");
-		break;
-	default:
-		fprintf(stderr, "Undefined Shading Option\n");
-		break;
-	}
-}
-
-// Anchor menu
-void main_menu(int op_id)
-{
-	if (op_id == 7) {
-		exit(EXIT_SUCCESS);
-	}
-}
-// ---------------------- MENU IMPLEMENTATION (END) ---------------------- //
 
 // ---------------------- SUN IMPLEMENTATION (START) --------------------- //
 
 //Normalization of a given point preserving signage
 void normal(point3 p) {
-	float d = 0.0;
+	float d = 0.0f;
 	int i;
 	for (i = 0; i < 3; i++) 
 	{
 		d += p[i] * p[i];
 	}
-	d = sqrt(d);
+	d = (float)sqrt((double)d);
 	for (i = 0; i < 3; i++) 
 	{
 		p[i] /= d;
@@ -222,7 +156,12 @@ void divide_triangle(point3 a, point3 b, point3 c, int m)
 void tetrahedron(int m) {
 	//Starting values for the tetrahedron
 	//These values are inverted so the sun moves opposite to its light source
-	point3 v[] = { {0.0, 0.0, 1.0}, {0.0, 0.942809, -0.33333}, {-0.816497, -0.471405, -0.333333}, {0.816497, -0.471405, -0.333333} };
+	point3 v[] = { 
+		{0.0f, 0.0f, 1.0f}, 
+		{0.0f, 0.942809f, -0.33333f}, 
+		{-0.816497f, -0.471405f, -0.333333f}, 
+		{0.816497f, -0.471405f, -0.333333f} 
+	};
 	int i;
 	for (i = 0; i < 3; i++)
 		position_sun[i] = (v[0][i] + v[1][i] + v[2][i] + v[3][i]) / 4;
@@ -242,9 +181,9 @@ void update_sunlight(void) {
 	//Start increasing the intensity until the sun reaches the top of the plane
 	//Start decreasing the intensity after the sun reaches the top of the plane
 	if (sun_angle > -90)
-		sunlight += 0.7 / 90;
+		sunlight += (GLfloat)(0.7 / 90);
 	else
-		sunlight -= 0.7 / 90;
+		sunlight -= (GLfloat)(0.7 / 90);
 
 	//Update light respectively
 	for (int i = 0; i < 3; i++)
@@ -545,6 +484,11 @@ static int main_menu_id;
 static int polygon_submenu_id;
 static int spotlight_submenu_id;
 static int shade_submenu_id;
+
+extern void polygon_submenu(int);
+extern void spotlight_submenu(int);
+extern void shade_submenu(int);
+extern void main_menu(int);
 
 int create_menu(void)
 {
