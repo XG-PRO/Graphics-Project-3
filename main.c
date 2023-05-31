@@ -381,7 +381,7 @@ void idle(void)
 void special_key_handler(int key, int x, int y)
 {
 	static GLdouble angle_rad = 0.0f;
-	static const GLdouble ROTATION_STEP = 3.0;
+	static const GLdouble ROTATION_STEP = 2.0;
 
 	// RIGHT and LEFT keys change the value of the angle, a.
 	if (key == GLUT_KEY_LEFT) {
