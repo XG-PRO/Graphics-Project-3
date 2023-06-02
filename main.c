@@ -48,7 +48,7 @@ static GLint subdivision_count = 4;
 static volatile GLdouble cam_pos[] = {0.0, HEIGHT_CAMERA, RADIUS_CAMERA};
 static volatile GLdouble cam_angle = 0.0;
 
-typedef float point3[4];
+typedef float point3[3];
 
 //LIGHT EXPLANATION
 //position(x,y,z,w), x,y,z indicate starting poisiton of the light relative to the modelview matrix, 
