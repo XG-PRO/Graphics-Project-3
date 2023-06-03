@@ -206,9 +206,9 @@ void update_sunlight(void) {
 		diffuse_sun[i] = sunlight;
 		spec_sun[i] = sunlight;
 	}
-
 }
 
+// Physical manifestation of the Sun
 void build_sun(void) {
 
 	//Update light attributes
@@ -241,10 +241,7 @@ void build_sun(void) {
 
 }
 
-// ----------------------- SUN IMPLEMENTATION (END) ---------------------- //
-
-// --------------------- HOUSE IMPLEMENTATION (START) -------------------- //
-
+// Physical manifestation of the House
 void build_house(void)
 {
 	glPushMatrix();
@@ -310,10 +307,7 @@ void build_house(void)
 	glPopMatrix();
 }
 
-// ---------------------- HOUSE IMPLEMENTATION (END) --------------------- //
-
-// --------------------- GRASS IMPLEMENTATION (START) -------------------- //
-
+// Physical manifestation of the Grass
 void build_grass(void)
 {
 	glColor3f(GRASS);
@@ -329,13 +323,10 @@ void build_grass(void)
 		glCallList(GROUND);
 	}
 }
-// ---------------------- GRASS IMPLEMENTATION (END) --------------------- //
 
-// ------------------- SPOTLIGHT IMPLEMENTATION (START) ------------------ //
-
+// Spotlight implementation
 void spotlight(void)
 {
-
 	glEnable(GL_LIGHT1);
 	glLightfv(GL_LIGHT1, GL_POSITION, position_spotlight);
 	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction_spotlight);
@@ -343,9 +334,7 @@ void spotlight(void)
 	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient_spotlight);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, spec_spotlight);
 	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 30.0);
-	
 }
-// -------------------- SPOTLIGHT IMPLEMENTATION (END) ------------------- //
 
 void display(void)
 {
