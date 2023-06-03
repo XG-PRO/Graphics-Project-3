@@ -48,7 +48,7 @@ extern void main_menu(int);
 static GLint subdivision_count = 4;
 
 static GLuint ground_base_list;
-static GLubyte ground_polygons_ids[POLY_COUNT];
+static GLushort ground_polygons_ids[POLY_COUNT];
 
 static volatile GLdouble cam_pos[] = {0.0, HEIGHT_CAMERA, RADIUS_CAMERA};
 static volatile GLdouble cam_angle = 0.0;
@@ -318,7 +318,7 @@ void build_grass(void)
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_grass);
 	
 	if (polygon_high) {
-		glCallLists(POLY_COUNT, GL_UNSIGNED_BYTE, ground_polygons_ids);
+		glCallLists(POLY_COUNT, GL_UNSIGNED_SHORT, ground_polygons_ids);
 	}
 	else {
 		glCallList(GROUND);
@@ -494,6 +494,9 @@ void init_lists(void)
 	// That means the ground consists of 10 x 10 polygons
 	const GLuint EDGE_LENGTH = (GLuint)sqrt((double)POLY_COUNT);
 	const GLfloat SUB_POLY_SIDE = 80.0f / EDGE_LENGTH;
+
+	printf("%f\n", SUB_POLY_SIDE);
+	printf("%d\n", EDGE_LENGTH);
 
 	ground_base_list = glGenLists(POLY_COUNT);
 	GLuint i, j;
