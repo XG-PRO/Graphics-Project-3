@@ -22,6 +22,8 @@
 #define HEIGHT_CAMERA 40.0
 #define RADIUS_CAMERA 70.0
 
+#define POLY_COUNT 100
+
 #define GRASS   0.00000000f, 0.6039216f, 0.09019608f
 #define BROWN   0.36078432f, 0.2509804f, 0.20000000f
 #define GRAY    0.30000000f, 0.3000000f, 0.30000000f
@@ -44,6 +46,9 @@ extern void shade_submenu(int);
 extern void main_menu(int);
 
 static GLint subdivision_count = 4;
+
+static GLuint ground_base_list;
+static GLubyte ground_polygons_ids[POLY_COUNT];
 
 static volatile GLdouble cam_pos[] = {0.0, HEIGHT_CAMERA, RADIUS_CAMERA};
 static volatile GLdouble cam_angle = 0.0;
@@ -316,7 +321,13 @@ void build_grass(void)
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_grass);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_grass);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_grass);
-	glCallList(GROUND);
+	
+	if (polygon_high) {
+		glCallLists(POLY_COUNT, GL_UNSIGNED_BYTE, ground_polygons_ids);
+	}
+	else {
+		glCallList(GROUND);
+	}
 }
 // ---------------------- GRASS IMPLEMENTATION (END) --------------------- //
 
@@ -488,9 +499,46 @@ void init_lists(void)
 		glEnd();
 	}
 	glEndList();
+
+	// Ground consists of POLY_COUNT = 100 polygons.
+	// That means the ground consists of 10 x 10 polygons
+	const GLuint EDGE_LENGTH = (GLuint)sqrt((double)POLY_COUNT);
+
+	ground_base_list = glGenLists(POLY_COUNT);
+	GLuint i, j;
+	GLfloat x_left, x_right;
+	GLfloat z_back, z_front;
+	
+	for (i = 0U; i < EDGE_LENGTH; i++)
+	{
+		x_left = -40.0f + (GLfloat)(i * 8);
+		x_right = -32.0f + (GLfloat)(i * 8);
+
+		for (j = 0U; j < EDGE_LENGTH; j++)
+		{
+			z_back = -40.0f + (GLfloat)(j * 8);
+			z_front = -32.0f + (GLfloat)(j * 8);
+
+			glNewList(ground_base_list + EDGE_LENGTH * i + j, GL_COMPILE);
+			{
+				glBegin(GL_POLYGON);
+				{
+					glVertex3f(x_left, 0.0f, z_back);
+					glVertex3f(x_right, 0.0f, z_back);
+					glVertex3f(x_right, 0.0f, z_front);
+					glVertex3f(x_left, 0.0f, z_front);
+				}
+				glEnd();
+			}
+			glEndList();
+		}
+	}
+	for (GLuint k = 0; k < POLY_COUNT; k++) {
+		ground_polygons_ids[k] = (GLubyte)(ground_base_list + k);
+	}
 }
 
-int create_menu(void)
+void create_menu(void)
 {
 	polygon_submenu_id = glutCreateMenu(polygon_submenu);
 	{
@@ -517,6 +565,7 @@ int create_menu(void)
 	}
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
+
 
 int main(int argc, char* argv[])
 {
