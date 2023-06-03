@@ -493,6 +493,7 @@ void init_lists(void)
 	// Ground consists of POLY_COUNT = 100 polygons.
 	// That means the ground consists of 10 x 10 polygons
 	const GLuint EDGE_LENGTH = (GLuint)sqrt((double)POLY_COUNT);
+	const GLfloat SUB_POLY_SIDE = 80.0f / EDGE_LENGTH;
 
 	ground_base_list = glGenLists(POLY_COUNT);
 	GLuint i, j;
@@ -501,13 +502,13 @@ void init_lists(void)
 	
 	for (i = 0U; i < EDGE_LENGTH; i++)
 	{
-		x_left = -40.0f + (GLfloat)(i * 8);
-		x_right = -32.0f + (GLfloat)(i * 8);
+		x_left = -40.0f + (GLfloat)(i * SUB_POLY_SIDE);
+		x_right = -40.0f + (GLfloat)((i + 1) * SUB_POLY_SIDE);
 
 		for (j = 0U; j < EDGE_LENGTH; j++)
 		{
-			z_back = -40.0f + (GLfloat)(j * 8);
-			z_front = -32.0f + (GLfloat)(j * 8);
+			z_back = -40.0f + (GLfloat)(j * SUB_POLY_SIDE);
+			z_front = -40.0f + (GLfloat)((j + 1) * SUB_POLY_SIDE);
 
 			glNewList(ground_base_list + EDGE_LENGTH * i + j, GL_COMPILE);
 			{
