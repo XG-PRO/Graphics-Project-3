@@ -240,6 +240,7 @@ void build_sun(void) {
 	glPopMatrix();
 
 }
+// ---------------------- SUN IMPLEMENTATION (END) --------------------- //
 
 // Physical manifestation of the House
 void build_house(void)
