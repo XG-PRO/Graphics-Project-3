@@ -22,7 +22,8 @@
 #define HEIGHT_CAMERA 40.0
 #define RADIUS_CAMERA 70.0
 
-#define POLY_COUNT 100
+// Must be perfect square
+#define POLY_COUNT 400
 
 #define GRASS   0.00000000f, 0.6039216f, 0.09019608f
 #define BROWN   0.36078432f, 0.2509804f, 0.20000000f
@@ -47,7 +48,6 @@ extern void main_menu(int);
 
 static GLint subdivision_count = 4;
 
-static GLuint ground_base_list;
 static GLushort ground_polygons_ids[POLY_COUNT];
 
 static volatile GLdouble cam_pos[] = {0.0, HEIGHT_CAMERA, RADIUS_CAMERA};
@@ -498,7 +498,7 @@ void init_lists(void)
 	printf("%f\n", SUB_POLY_SIDE);
 	printf("%d\n", EDGE_LENGTH);
 
-	ground_base_list = glGenLists(POLY_COUNT);
+	GLuint base = glGenLists(POLY_COUNT);
 	GLuint i, j;
 	GLfloat x_left, x_right;
 	GLfloat z_back, z_front;
@@ -513,7 +513,7 @@ void init_lists(void)
 			z_back = -40.0f + (GLfloat)(j * SUB_POLY_SIDE);
 			z_front = -40.0f + (GLfloat)((j + 1) * SUB_POLY_SIDE);
 
-			glNewList(ground_base_list + EDGE_LENGTH * i + j, GL_COMPILE);
+			glNewList(base + EDGE_LENGTH * i + j, GL_COMPILE);
 			{
 				glBegin(GL_POLYGON);
 				{
@@ -528,7 +528,7 @@ void init_lists(void)
 		}
 	}
 	for (GLuint k = 0; k < POLY_COUNT; k++) {
-		ground_polygons_ids[k] = (GLubyte)(ground_base_list + k);
+		ground_polygons_ids[k] = (GLushort)(base + k);
 	}
 }
 
