@@ -22,8 +22,8 @@
 #define HEIGHT_CAMERA 40.0
 #define RADIUS_CAMERA 70.0
 
-// Must be perfect square
-#define POLY_COUNT 400
+// Must be perfect square (+bonus if its root divides 80)
+#define POLY_COUNT 6400
 
 #define GRASS   0.00000000f, 0.6039216f, 0.09019608f
 #define BROWN   0.36078432f, 0.2509804f, 0.20000000f
@@ -53,7 +53,7 @@ static GLushort ground_polygons_ids[POLY_COUNT];
 static volatile GLdouble cam_pos[] = {0.0, HEIGHT_CAMERA, RADIUS_CAMERA};
 static volatile GLdouble cam_angle = 0.0;
 
-typedef float point3[3];
+typedef GLfloat point3f[3];
 
 //LIGHT EXPLANATION
 //position(x,y,z,w), x,y,z indicate starting poisiton of the light relative to the modelview matrix, 
@@ -88,7 +88,7 @@ static GLfloat spec_roof[] = { 1.0f, 1.0f, 1.0f, 1.0f };	//Metallic surface
 
 //Grass Materials
 
-static GLfloat diffuse_grass[] = { 0.3f, 1.0f, 0.3f, 0.3f };
+static GLfloat diffuse_grass[] = { 0.3f, 1.0f, 0.3f, 0.3f }; // 0.3 last param?
 static GLfloat ambient_grass[] = { 0.3f, 1.0f, 0.3f, 0.0f };
 static GLfloat spec_grass[] = { 0.0f, 0.0f, 0.0f, 0.0f };	//Matte surface
 
@@ -97,15 +97,15 @@ static GLfloat spec_grass[] = { 0.0f, 0.0f, 0.0f, 0.0f };	//Matte surface
 static GLfloat diffuse_spotlight[] = { 1.0f , 1.0f, 1.0f, 1.0f };
 static GLfloat ambient_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat spec_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f, 1.0f };
-static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, -10.0f, 1.0f };
+static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
+static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
 
 
 
 // ---------------------- SUN IMPLEMENTATION (START) --------------------- //
 
 //Normalization of a given point preserving signage
-void normal(point3 p) {
+void normal(point3f p) {
 	float d = 0.0f;
 	int i;
 	for (i = 0; i < 3; i++) 
@@ -120,9 +120,9 @@ void normal(point3 p) {
 }
 
 //Recursive sibdivision of a triangle into 4 equilateral triangles
-void divide_triangle(point3 a, point3 b, point3 c, int m)
+void divide_triangle(point3f a, point3f b, point3f c, int m)
 {
-	point3 v1, v2, v3;
+	point3f v1, v2, v3;
 	int j;
 
 	//Subdivide current triangle
@@ -171,7 +171,7 @@ void divide_triangle(point3 a, point3 b, point3 c, int m)
 void tetrahedron(int m) {
 	//Starting values for the tetrahedron
 	//These values are inverted so the sun moves opposite to its light source
-	point3 v[] = { 
+	point3f v[] = {
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.942809f, -0.33333f}, 
 		{-0.816497f, -0.471405f, -0.333333f}, 
@@ -334,7 +334,7 @@ void spotlight(void)
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse_spotlight);
 	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient_spotlight);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, spec_spotlight);
-	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 30.0);
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 30.0f);
 }
 
 void display(void)
@@ -350,6 +350,11 @@ void display(void)
 	glLoadIdentity();
 
 	//glColor3f(1.0f, 1.0f, 1.0f);
+	
+	if (smooth_shade)
+		glShadeModel(GL_SMOOTH);
+	else
+		glShadeModel(GL_FLAT);
 
 	//House Creation
 	build_house();
@@ -372,8 +377,8 @@ void display(void)
 void idle(void)
 {
 	// Update the sun's rotational angle but backwards to resemple correct day transition
-	sun_angle -= 0.5;
-	if (sun_angle == -180)
+	sun_angle -= 0.5f;
+	if (sun_angle <= -180.0f)
 		sun_angle = 0;
 
 	glutPostRedisplay();
@@ -426,10 +431,10 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-5.0f, 0.0f, 10.0f);
-			glVertex3f(-5.0f, 10.0f, 10.0f);
 			glVertex3f(-5.0f, 10.0f, -10.0f);
 			glVertex3f(-5.0f, 0.0f, -10.0f);
+			glVertex3f(-5.0f, 0.0f, 10.0f);
+			glVertex3f(-5.0f, 10.0f, 10.0f);
 		}
 		glEnd();
 	}
@@ -440,10 +445,10 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-5.0f, 0.0f, 10.0f);
 			glVertex3f(-5.0f, 10.0f, 10.0f);
-			glVertex3f(5.0f, 10.0f, 10.0f);
+			glVertex3f(-5.0f, 0.0f, 10.0f);
 			glVertex3f(5.0f, 0.0f, 10.0f);
+			glVertex3f(5.0f, 10.0f, 10.0f);
 		}
 		glEnd();
 	}
@@ -454,9 +459,9 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-5.0f, 10.0f, 10.0f);
-			glVertex3f(-5.0f, 10.0f, -10.0f);
 			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f);
+			glVertex3f(-5.0f, 10.0f, -10.0f);
+			glVertex3f(-5.0f, 10.0f, 10.0f);
 			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
 		}
 		glEnd();
@@ -468,9 +473,9 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
 			glVertex3f(-5.0f, 10.0f, 10.0f);
 			glVertex3f(5.0f, 10.0f, 10.0f);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
 		}
 		glEnd();
 	}
@@ -481,10 +486,10 @@ void init_lists(void)
 	{
 		glBegin(GL_POLYGON);
 		{
-			glVertex3f(-40.0f, 0.0f, 40.0f);
 			glVertex3f(-40.0f, 0.0f, -40.0f);
-			glVertex3f(40.0f, 0.0f, -40.0f);
+			glVertex3f(-40.0f, 0.0f, 40.0f);
 			glVertex3f(40.0f, 0.0f, 40.0f);
+			glVertex3f(40.0f, 0.0f, -40.0f);
 		}
 		glEnd();
 	}
@@ -494,9 +499,6 @@ void init_lists(void)
 	// That means the ground consists of 10 x 10 polygons
 	const GLuint EDGE_LENGTH = (GLuint)sqrt((double)POLY_COUNT);
 	const GLfloat SUB_POLY_SIDE = 80.0f / EDGE_LENGTH;
-
-	printf("%f\n", SUB_POLY_SIDE);
-	printf("%d\n", EDGE_LENGTH);
 
 	GLuint base = glGenLists(POLY_COUNT);
 	GLuint i, j;
@@ -518,9 +520,9 @@ void init_lists(void)
 				glBegin(GL_POLYGON);
 				{
 					glVertex3f(x_left, 0.0f, z_back);
-					glVertex3f(x_right, 0.0f, z_back);
-					glVertex3f(x_right, 0.0f, z_front);
 					glVertex3f(x_left, 0.0f, z_front);
+					glVertex3f(x_right, 0.0f, z_front);
+					glVertex3f(x_right, 0.0f, z_back);
 				}
 				glEnd();
 			}
