@@ -481,9 +481,9 @@ void init_lists(void)
 	glEndList();
 
 	cross_product(cross,
-		-5.0f, 0.0f, 10.0f,
+		5.0f, 10.0f, 10.0f,
 		5.0f, 0.0f, 10.0f,
-		5.0f, 10.0f, 10.0f
+		-5.0f, 0.0f, 10.0f
 	);
 	normal(cross);
 
@@ -578,14 +578,8 @@ void init_lists(void)
 		glEnd();
 	}
 	glEndList();
-
 	
-	cross_product(cross,
-		-5.0f, 10.0f, -10.0f,
-		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f,
-		5.0f, 10.0f, -10.0f
-	);
-	normal(cross);
+	cross[2] = -cross[2];
 
 	// North roof of the house
 	glNewList(NORTH_ROOF, GL_COMPILE);
