@@ -1,5 +1,3 @@
-// Implicit conversion from data type A to 
-// data type B is now forbidden >:D (sanest)
 #pragma warning(error: 4305)
 
 #define _USE_MATH_DEFINES
@@ -23,8 +21,7 @@
 #define NORTH_ROOF	0b1000
 #define GROUND      0b1001
 
-#define HEIGHT_CAMERA 40.0
-#define RADIUS_CAMERA 70.0
+#define RADIUS_CAMERA 80.62257748298549
 
 // Must be perfect square (+bonus if its root divides 80)
 #define POLY_COUNT 100
@@ -36,27 +33,34 @@
 #define SQRT_75_PLUS_10 18.66025403784439
 
 
+// Menu options
 volatile bool polygon_high = true;
 volatile bool spotlight_on = true;
 volatile bool smooth_shade = true;
 
+// Menu ids
 static int main_menu_id;
 static int polygon_submenu_id;
 static int spotlight_submenu_id;
 static int shade_submenu_id;
 
+// Menu externals
 extern void polygon_submenu(int);
 extern void spotlight_submenu(int);
 extern void shade_submenu(int);
 extern void main_menu(int);
 
+// Depth of recursive subdivision for the sun
 static GLint subdivision_count = 4;
 
+// List ids for the many polygons that the ground consists of
 static GLushort ground_polygons_ids[POLY_COUNT];
 
-static volatile GLdouble cam_pos[] = { 0.0, HEIGHT_CAMERA, RADIUS_CAMERA };
-static volatile GLdouble cam_angle = 0.0;
+static volatile GLdouble cam_pos[] = { 0.0, 40.0, 70.0 };
+static volatile GLdouble cam_angle_horizontal = 0.0;
+static volatile GLdouble cam_angle_vertical = 29.74488129694223;
 
+// vector3f and point3f only have scemantic differences
 typedef GLfloat point3f[3];
 typedef GLfloat vector3f[3];
 
@@ -76,14 +80,11 @@ typedef GLfloat vector3f[3];
 static GLfloat sunlight = 0.3f;
 static GLfloat sunEmissionMaterial[] = { 0.2f, 0.2f, 0.0f, 1.0f };
 static GLfloat diffuse_sun[] = { 0.3f, 0.3f, 0.3f, 1.0f };
-static GLfloat ambient_sun[] = { 1.0f, 1.0f, 0.0f, 1.0f };
 static GLfloat spec_sun[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 static GLfloat position_sun[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-static GLfloat direction_sun[] = { 0.0f, 0.0f, 0.0f };
 static GLfloat sun_angle = 0.0;
 
 //House Materials
-
 static GLfloat diffuse_house[] = { 0.3f, 0.0f, 0.0f, 1.0f };
 static GLfloat ambient_house[] = { 0.3f, 0.0f, 0.0f, 1.0f };
 static GLfloat spec_house[] = { 0.0f, 0.0f, 0.0f, 1.0f };	//Matte surface
@@ -93,20 +94,25 @@ static GLfloat ambient_roof[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 static GLfloat spec_roof[] = { 1.0f, 1.0f, 1.0f, 1.0f };	//Metallic surface
 
 //Grass Materials
-
 static GLfloat diffuse_grass[] = { 0.3f, 1.0f, 0.3f, 0.3f }; // 0.3 last param?
 static GLfloat ambient_grass[] = { 0.3f, 1.0f, 0.3f, 0.0f };
 static GLfloat spec_grass[] = { 0.0f, 0.0f, 0.0f, 0.0f };	//Matte surface
 
 //Spotlight Light
-
 static GLfloat diffuse_spotlight[] = { 1.0f , 1.0f, 1.0f, 1.0f };
 static GLfloat ambient_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat spec_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
 static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
 
-
+/*
+*	Suppose three points p0, p1, p2.
+*	The first parameter is assigned the cross product:
+*		(p2 - p1) x (p0 - p1)
+*	The next parameters are the coordinates of the three points.
+*	To get the outer product of a triangle's sides, they must be 
+*	inserted clockwise in order for it to point out of the object.
+*/
 void cross_product(vector3f out, 
 	GLfloat p00, GLfloat p01, GLfloat p02,
 	GLfloat p10, GLfloat p11, GLfloat p12,
@@ -143,7 +149,7 @@ void divide_triangle(point3f a, point3f b, point3f c, int m)
 	vector3f cross;
 	point3f v1, v2, v3;
 	int j;
-
+	
 	//Subdivide current triangle
 	if (m > 0)
 	{
@@ -202,10 +208,6 @@ void tetrahedron(int m) {
 		{-0.816497f, -0.471405f, -0.333333f},
 		{0.816497f, -0.471405f, -0.333333f}
 	};
-	int i;
-	for (i = 0; i < 3; i++) {
-		position_sun[i] = (v[0][i] + v[1][i] + v[2][i] + v[3][i]) / 4;
-	}
 
 	//Take the points of the tetrahedron and divide it into 4 triangles
 	//Initiate subdivision on each one of them
@@ -222,9 +224,9 @@ void update_sunlight(void) {
 	//Start increasing the intensity until the sun reaches the top of the plane
 	//Start decreasing the intensity after the sun reaches the top of the plane
 	if (sun_angle > -90)
-		sunlight += (GLfloat)(0.7 / 90);
+		sunlight += 0.7f / 90;
 	else
-		sunlight -= (GLfloat)(0.7 / 90);
+		sunlight -= 0.7f / 90;
 
 	//Update light respectively
 	for (int i = 0; i < 3; i++)
@@ -240,27 +242,24 @@ void build_sun(void) {
 	//Update light attributes
 	update_sunlight();
 
-
 	glPushMatrix();
-	//Create sun's materials for color and light
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, sunEmissionMaterial);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
-	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_sun);
-	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
-	//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_sun);
-	
-	//Rotate sun on the plane so it resemples dawn and dusk
-	glRotated(sun_angle, 0.0, 0.0, 1.0);
-	glTranslatef(-50.0, 0.0, 0.0);
+	{
+		//Create sun's materials for color and light
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, sunEmissionMaterial);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
 
-	//Create sun's polygons
-	tetrahedron(subdivision_count);
+		//Rotate sun on the plane so it resemples dawn and dusk
+		glRotated(sun_angle, 0.0, 0.0, 1.0);
+		glTranslatef(-50.0, 0.0, 0.0);
 
-	//Create sun's light as a directional spotlight
-	glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
+		//Create sun's polygons
+		tetrahedron(subdivision_count);
 
+		//Create sun's light as a directional spotlight
+		glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
+		glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
+	}
 	glPopMatrix();
 }
 // ---------------------- SUN IMPLEMENTATION (END) --------------------- //
@@ -270,20 +269,20 @@ void build_house(void)
 {
 	glPushMatrix();
 	{
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_house);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_house);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_house);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, spec_house);
+		glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_house);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_house);
+		glMaterialf(GL_FRONT, GL_SHININESS, 0.0);
 
 		glCallList(EAST_WALL);
 		glCallList(WEST_WALL);
 		glCallList(SOUTH_WALL);
 		glCallList(NORTH_WALL);
 
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_roof);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_roof);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_roof);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, spec_roof);
+		glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_roof);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_roof);
+		glMaterialf(GL_FRONT, GL_SHININESS, 100.0);
 
 		glCallList(EAST_ROOF);
 		glCallList(WEST_ROOF);
@@ -303,9 +302,11 @@ void build_grass(void)
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_grass);
 
 	if (polygon_high) {
+		// 100 polygons
 		glCallLists(POLY_COUNT, GL_UNSIGNED_SHORT, ground_polygons_ids);
 	}
 	else {
+		// 1 big polygon
 		glCallList(GROUND);
 	}
 }
@@ -329,6 +330,8 @@ void display(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-60.0, 60.0, -60.0, 60.0, -300.0, 300.0);
+	// Camera is positioned on the circle:
+	// x^2 + z^2 = 70^2, y = 40
 	gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -381,30 +384,56 @@ void idle(void)
 */
 void special_key_handler(int key, int x, int y)
 {
-	static GLdouble angle_rad = 0.0f;
+	static GLdouble angle_rad_horizontal = 0.0f;
+	static GLdouble angle_rad_vertical = 0.0f;
 	static const GLdouble ROTATION_STEP = 2.0;
+
+	printf("%f, %f, %f\n", cam_pos[0], cam_pos[1], cam_pos[2]);
 
 	// RIGHT and LEFT keys change the value of the angle, a.
 	if (key == GLUT_KEY_LEFT) {
 		// Rotate camera towards positive direction by some deg @y axis
-		cam_angle += ROTATION_STEP;
-		if (cam_angle >= 360.0) {
-			cam_angle -= 360.0;
+		cam_angle_horizontal += ROTATION_STEP;
+		if (cam_angle_horizontal >= 360.0) {
+			cam_angle_horizontal -= 360.0;
 		}
 	}
 	else if (key == GLUT_KEY_RIGHT) {
 		// Rotate camera towards negative direction by some deg @y axis
-		cam_angle -= ROTATION_STEP;
-		if (cam_angle <= 0.0) {
-			cam_angle += 360.0;
+		cam_angle_horizontal -= ROTATION_STEP;
+		if (cam_angle_horizontal <= 0.0) {
+			cam_angle_horizontal += 360.0;
+		}
+	}
+	else if (key == GLUT_KEY_UP) {
+		// Rotate camera towards negative direction by some deg @y axis
+		cam_angle_vertical += ROTATION_STEP;
+		if (cam_angle_vertical >= 360.0) {
+			cam_angle_vertical -= 360.0;
+		}
+	}
+	else if (key == GLUT_KEY_DOWN) {
+		// Rotate camera towards negative direction by some deg @y axis
+		cam_angle_vertical -= ROTATION_STEP;
+		if (cam_angle_vertical <= 0.0) {
+			cam_angle_vertical += 360.0;
 		}
 	}
 	else return;
 
-	angle_rad = cam_angle * M_PI / 180.0;
+	printf("%f, %f, %f\n", cam_pos[0], cam_pos[1], cam_pos[2]);
 
-	cam_pos[0] = RADIUS_CAMERA * sin(angle_rad);	// x(a)
-	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad);	// z(a)
+	angle_rad_horizontal = cam_angle_horizontal * M_PI / 180.0;	// v angle
+	angle_rad_vertical = cam_angle_vertical * M_PI / 180.0;		// u angle
+
+	// x(u, v) = 70 * cosu * sinv
+	cam_pos[0] = RADIUS_CAMERA * cos(angle_rad_vertical) * sin(angle_rad_horizontal);
+	// y(u, v) = 70 * sinu
+	cam_pos[1] = RADIUS_CAMERA * sin(angle_rad_vertical);
+	// z(u, v) = 70 * cosu * cosv
+	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad_vertical) * cos(angle_rad_horizontal);
+
+	printf("%f, %f, %f\n", cam_pos[0], cam_pos[1], cam_pos[2]);
 
 	glutPostRedisplay();
 }
@@ -419,8 +448,6 @@ void init_lists(void)
 		-5.0f, 0.0f, 10.0f
 	);
 	normal(cross);
-
-	printf("(%f, %f, %f)\n", cross[0], cross[1], cross[2]);
 
 	// East wall of the house
 	glNewList(EAST_WALL, GL_COMPILE);
