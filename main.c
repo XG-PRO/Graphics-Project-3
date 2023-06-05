@@ -140,6 +140,7 @@ void normal(point3f p) {
 //Recursive sibdivision of a triangle into 4 equilateral triangles
 void divide_triangle(point3f a, point3f b, point3f c, int m)
 {
+	vector3f cross;
 	point3f v1, v2, v3;
 	int j;
 
@@ -174,13 +175,19 @@ void divide_triangle(point3f a, point3f b, point3f c, int m)
 	//Draw final points as polygons onto the unit sphere
 	else
 	{
+		cross_product(cross,
+			c[0], c[1], c[2],
+			a[0], a[1], a[2],
+			b[0], b[1], b[2]
+		);
+
 		glBegin(GL_POLYGON);
-		glNormal3fv(a);
-		glVertex3fv(a);
-		glNormal3fv(b);
-		glVertex3fv(b);
-		glNormal3fv(c);
-		glVertex3fv(c);
+		{
+			glNormal3fv(cross);
+			glVertex3fv(a);
+			glVertex3fv(b);
+			glVertex3fv(c);
+		}
 		glEnd();
 	}
 }
