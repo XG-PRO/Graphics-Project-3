@@ -23,7 +23,7 @@
 #define RADIUS_CAMERA 70.0
 
 // Must be perfect square (+bonus if its root divides 80)
-#define POLY_COUNT 6400
+#define POLY_COUNT 100
 
 #define GRASS   0.00000000f, 0.6039216f, 0.09019608f
 #define BROWN   0.36078432f, 0.2509804f, 0.20000000f
@@ -50,7 +50,7 @@ static GLint subdivision_count = 4;
 
 static GLushort ground_polygons_ids[POLY_COUNT];
 
-static volatile GLdouble cam_pos[] = {0.0, HEIGHT_CAMERA, RADIUS_CAMERA};
+static volatile GLdouble cam_pos[] = { 0.0, HEIGHT_CAMERA, RADIUS_CAMERA };
 static volatile GLdouble cam_angle = 0.0;
 
 typedef GLfloat point3f[3];
@@ -108,12 +108,12 @@ static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, 10.0f,
 void normal(point3f p) {
 	float d = 0.0f;
 	int i;
-	for (i = 0; i < 3; i++) 
+	for (i = 0; i < 3; i++)
 	{
 		d += p[i] * p[i];
 	}
 	d = (float)sqrt((double)d);
-	for (i = 0; i < 3; i++) 
+	for (i = 0; i < 3; i++)
 	{
 		p[i] /= d;
 	}
@@ -154,15 +154,15 @@ void divide_triangle(point3f a, point3f b, point3f c, int m)
 	}
 
 	//Draw final points as polygons onto the unit sphere
-	else 
+	else
 	{
 		glBegin(GL_POLYGON);
-			glNormal3fv(a);
-			glVertex3fv(a);
-			glNormal3fv(b);
-			glVertex3fv(b);
-			glNormal3fv(c);
-			glVertex3fv(c);
+		glNormal3fv(a);
+		glVertex3fv(a);
+		glNormal3fv(b);
+		glVertex3fv(b);
+		glNormal3fv(c);
+		glVertex3fv(c);
 		glEnd();
 	}
 }
@@ -172,10 +172,10 @@ void tetrahedron(int m) {
 	//Starting values for the tetrahedron
 	//These values are inverted so the sun moves opposite to its light source
 	point3f v[] = {
-		{0.0f, 0.0f, 1.0f}, 
-		{0.0f, 0.942809f, -0.33333f}, 
-		{-0.816497f, -0.471405f, -0.333333f}, 
-		{0.816497f, -0.471405f, -0.333333f} 
+		{0.0f, 0.0f, 1.0f},
+		{0.0f, 0.942809f, -0.33333f},
+		{-0.816497f, -0.471405f, -0.333333f},
+		{0.816497f, -0.471405f, -0.333333f}
 	};
 	int i;
 	for (i = 0; i < 3; i++)
@@ -216,26 +216,26 @@ void build_sun(void) {
 
 
 	glPushMatrix();
-		//Create sun's materials for color and light
-		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, sunEmissionMaterial);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
-		//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_sun);
-		//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
-		//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_sun);
+	//Create sun's materials for color and light
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, sunEmissionMaterial);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_sun);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_sun);
 
 
-		//Create sun's light as a directional spotlight
-		glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
-		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
-		glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
+	//Create sun's light as a directional spotlight
+	glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
 
 
-		//Rotate sun on the plane so it resemples dawn and dusk
-		glRotated(sun_angle, 0.0, 0.0, 1.0);
-		glTranslatef(-50.0, 0.0, 0.0);
+	//Rotate sun on the plane so it resemples dawn and dusk
+	glRotated(sun_angle, 0.0, 0.0, 1.0);
+	glTranslatef(-50.0, 0.0, 0.0);
 
-		//Create sun's polygons
-		tetrahedron(subdivision_count);
+	//Create sun's polygons
+	tetrahedron(subdivision_count);
 
 	glPopMatrix();
 
@@ -247,63 +247,63 @@ void build_house(void)
 {
 	glPushMatrix();
 
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_house);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_house);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_house);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_house);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_house);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_house);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
 
-		glPushMatrix();
+	glPushMatrix();
 
 
-			//glColor3f(BROWN);
-			// EAST wall
-			glCallList(EAST_WALL);
+	//glColor3f(BROWN);
+	// EAST wall
+	glCallList(EAST_WALL);
 
-			// WEST wall constructed by rotating the East wall by 180 deg @y axis
-			glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-			glCallList(EAST_WALL);
+	// WEST wall constructed by rotating the East wall by 180 deg @y axis
+	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glCallList(EAST_WALL);
 
-		glPopMatrix();
-		glPushMatrix();
+	glPopMatrix();
+	glPushMatrix();
 
-			// South wall
-			glCallList(SOUTH_WALL);
+	// South wall
+	glCallList(SOUTH_WALL);
 
-			// NORTH wall constructed by rotating the South wall by 180 deg @y axis
-			glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-			glCallList(SOUTH_WALL);
+	// NORTH wall constructed by rotating the South wall by 180 deg @y axis
+	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glCallList(SOUTH_WALL);
 
-		glPopMatrix();
+	glPopMatrix();
 	glPopMatrix();
 
 	glPushMatrix();
 
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_roof);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_roof);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_roof);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0);;
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_roof);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_roof);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_roof);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0);;
 
-		glPushMatrix();
+	glPushMatrix();
 
-			//glColor3f(GRAY);
-			// EAST roof
-			glCallList(EAST_ROOF);
+	//glColor3f(GRAY);
+	// EAST roof
+	glCallList(EAST_ROOF);
 
-			// WEST roof constructed by rotation the East roof by 180 deg @y axis
-			glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-			glCallList(EAST_ROOF);
+	// WEST roof constructed by rotation the East roof by 180 deg @y axis
+	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glCallList(EAST_ROOF);
 
-		glPopMatrix();
-		glPushMatrix();
+	glPopMatrix();
+	glPushMatrix();
 
-			// SOUTH roof
-			glCallList(SOUTH_ROOF);
+	// SOUTH roof
+	glCallList(SOUTH_ROOF);
 
-			// NORTH roof constructed by rotation the South roof by 180 deg @y axis
-			glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-			glCallList(SOUTH_ROOF);
+	// NORTH roof constructed by rotation the South roof by 180 deg @y axis
+	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+	glCallList(SOUTH_ROOF);
 
-		glPopMatrix();
+	glPopMatrix();
 
 	glPopMatrix();
 }
@@ -316,7 +316,7 @@ void build_grass(void)
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_grass);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_grass);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_grass);
-	
+
 	if (polygon_high) {
 		glCallLists(POLY_COUNT, GL_UNSIGNED_SHORT, ground_polygons_ids);
 	}
@@ -350,7 +350,7 @@ void display(void)
 	glLoadIdentity();
 
 	//glColor3f(1.0f, 1.0f, 1.0f);
-	
+
 	if (smooth_shade)
 		glShadeModel(GL_SMOOTH);
 	else
@@ -364,7 +364,7 @@ void display(void)
 
 	//Grass Creation
 	build_grass();
-	
+
 	//Spotlight Creation
 	if (spotlight_on)
 		spotlight();
@@ -384,9 +384,9 @@ void idle(void)
 	glutPostRedisplay();
 }
 
-/*	
-*	The camera/observer moves on a circle with its center located 
-*	on the Y axis, 40 units above the ground (directly above the 
+/*
+*	The camera/observer moves on a circle with its center located
+*	on the Y axis, 40 units above the ground (directly above the
 *	house). The circle has a distance of 70 units, thus:
 *		C: x^2 + z^2 = 70^2, y = 40
 *	Parametric expression:
@@ -439,7 +439,7 @@ void init_lists(void)
 		glEnd();
 	}
 	glEndList();
-	
+
 	// South wall of the house
 	glNewList(SOUTH_WALL, GL_COMPILE);
 	{
@@ -504,7 +504,7 @@ void init_lists(void)
 	GLuint i, j;
 	GLfloat x_left, x_right;
 	GLfloat z_back, z_front;
-	
+
 	for (i = 0U; i < EDGE_LENGTH; i++)
 	{
 		x_left = -40.0f + (GLfloat)(i * SUB_POLY_SIDE);
