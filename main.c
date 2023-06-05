@@ -388,8 +388,6 @@ void special_key_handler(int key, int x, int y)
 	static GLdouble angle_rad_vertical = 0.0f;
 	static const GLdouble ROTATION_STEP = 2.0;
 
-	printf("%f, %f, %f\n", cam_pos[0], cam_pos[1], cam_pos[2]);
-
 	// RIGHT and LEFT keys change the value of the angle, a.
 	if (key == GLUT_KEY_LEFT) {
 		// Rotate camera towards positive direction by some deg @y axis
@@ -421,8 +419,6 @@ void special_key_handler(int key, int x, int y)
 	}
 	else return;
 
-	printf("%f, %f, %f\n", cam_pos[0], cam_pos[1], cam_pos[2]);
-
 	angle_rad_horizontal = cam_angle_horizontal * M_PI / 180.0;	// v angle
 	angle_rad_vertical = cam_angle_vertical * M_PI / 180.0;		// u angle
 
@@ -432,8 +428,6 @@ void special_key_handler(int key, int x, int y)
 	cam_pos[1] = RADIUS_CAMERA * sin(angle_rad_vertical);
 	// z(u, v) = 70 * cosu * cosv
 	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad_vertical) * cos(angle_rad_horizontal);
-
-	printf("%f, %f, %f\n", cam_pos[0], cam_pos[1], cam_pos[2]);
 
 	glutPostRedisplay();
 }
