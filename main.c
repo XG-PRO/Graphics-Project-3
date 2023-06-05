@@ -54,6 +54,8 @@ static volatile GLdouble cam_pos[] = { 0.0, HEIGHT_CAMERA, RADIUS_CAMERA };
 static volatile GLdouble cam_angle = 0.0;
 
 typedef GLfloat point3f[3];
+typedef GLfloat vector3f[3];
+
 
 //LIGHT EXPLANATION
 //position(x,y,z,w), x,y,z indicate starting poisiton of the light relative to the modelview matrix, 
@@ -101,6 +103,18 @@ static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f, 1
 static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
 
 
+void cross_product(vector3f out, 
+	GLfloat p00, GLfloat p01, GLfloat p02,
+	GLfloat p10, GLfloat p11, GLfloat p12,
+	GLfloat p20, GLfloat p21, GLfloat p22)
+{
+	vector3f v1 = { p20 - p10, p21 - p11, p22 - p12 };
+	vector3f v2 = { p00 - p10, p01 - p11, p02 - p12 };
+
+	out[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	out[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	out[2] = v1[0] * v2[1] - v1[1] * v2[0];
+}
 
 // ---------------------- SUN IMPLEMENTATION (START) --------------------- //
 
@@ -426,6 +440,8 @@ void special_key_handler(int key, int x, int y)
 
 void init_lists(void)
 {
+	vector3f cross;
+
 	// East wall of the house
 	glNewList(EAST_WALL, GL_COMPILE);
 	{
@@ -481,14 +497,28 @@ void init_lists(void)
 	}
 	glEndList();
 
+	cross_product(cross,
+		-40.0f, 0.0f, 40.0f,
+		-40.0f, 0.0f, -40.0f,
+		40.0f, 0.0f, 40.0f
+	);
+	normal(cross);
+
 	// Grass polygon
 	glNewList(GROUND, GL_COMPILE);
 	{
 		glBegin(GL_POLYGON);
 		{
+			glNormal3fv(cross);
 			glVertex3f(-40.0f, 0.0f, -40.0f);
+
+			glNormal3fv(cross);
 			glVertex3f(-40.0f, 0.0f, 40.0f);
+
+			glNormal3fv(cross);
 			glVertex3f(40.0f, 0.0f, 40.0f);
+
+			glNormal3fv(cross);
 			glVertex3f(40.0f, 0.0f, -40.0f);
 		}
 		glEnd();
@@ -519,9 +549,13 @@ void init_lists(void)
 			{
 				glBegin(GL_POLYGON);
 				{
+					glNormal3fv(cross);
 					glVertex3f(x_left, 0.0f, z_back);
+					glNormal3fv(cross);
 					glVertex3f(x_left, 0.0f, z_front);
+					glNormal3fv(cross);
 					glVertex3f(x_right, 0.0f, z_front);
+					glNormal3fv(cross);
 					glVertex3f(x_right, 0.0f, z_back);
 				}
 				glEnd();
