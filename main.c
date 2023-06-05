@@ -373,14 +373,19 @@ void idle(void)
 }
 
 /*
-*	The camera/observer moves on a circle with its center located
-*	on the Y axis, 40 units above the ground (directly above the
-*	house). The circle has a distance of 70 units, thus:
-*		C: x^2 + z^2 = 70^2, y = 40
+*	The camera/observer moves on a sphere with its center being 
+*	the origin of the axes. The sphere has a distance of 10 * sqrt(65)
+*	units, thus:
+*		C: x^2 + y^2 z^2 = 6500
 *	Parametric expression:
-*		- C: [x(a)]^2 + [z(a)]^2 = 70^2, y = 40
-*		- x(a) = r * sin(a)
-*		- z(a) = r * cos(a)
+*		- C: [x(u,v)]^2 + [y(u,v)]^2 [z(u,v)]^2 = 6500
+*		- x(u,v) = r * cos(u) * sin(v)
+*		- y(u,v) = r * sin(u)
+*		- z(u,v) = r * cos(u) * cos(v)
+* 
+*	The camera's initial location is at (0, 40, 70)
+*	The circle x^2 + z^2 = 70^2, y = 40 is entirely
+*	contained into the aforementioned sphere.
 */
 void special_key_handler(int key, int x, int y)
 {
