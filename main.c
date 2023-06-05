@@ -13,11 +13,15 @@
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 800
 
-#define EAST_WALL   0b001
-#define SOUTH_WALL  0b010
-#define EAST_ROOF   0b011
-#define SOUTH_ROOF  0b100
-#define GROUND      0b101
+#define EAST_WALL   0b0001
+#define WEST_WALL	0b0010
+#define SOUTH_WALL  0b0011
+#define NORTH_WALL	0b0100
+#define EAST_ROOF   0b0101
+#define WEST_ROOF	0b0110
+#define SOUTH_ROOF  0b0111
+#define NORTH_ROOF	0b1000
+#define GROUND      0b1001
 
 #define HEIGHT_CAMERA 40.0
 #define RADIUS_CAMERA 70.0
@@ -237,12 +241,10 @@ void build_sun(void) {
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_sun);
 
-
 	//Create sun's light as a directional spotlight
 	glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
-
 
 	//Rotate sun on the plane so it resemples dawn and dusk
 	glRotated(sun_angle, 0.0, 0.0, 1.0);
@@ -252,7 +254,6 @@ void build_sun(void) {
 	tetrahedron(subdivision_count);
 
 	glPopMatrix();
-
 }
 // ---------------------- SUN IMPLEMENTATION (END) --------------------- //
 
@@ -260,65 +261,27 @@ void build_sun(void) {
 void build_house(void)
 {
 	glPushMatrix();
+	{
+		glMaterialfv(GL_FRONT, GL_SPECULAR, spec_house);
+		glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_house);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_house);
+		glMaterialf(GL_FRONT, GL_SHININESS, 0.0);
 
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_house);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_house);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_house);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
+		glCallList(EAST_WALL);
+		glCallList(WEST_WALL);
+		glCallList(SOUTH_WALL);
+		glCallList(NORTH_WALL);
 
-	glPushMatrix();
+		glMaterialfv(GL_FRONT, GL_SPECULAR, spec_roof);
+		glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_roof);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_roof);
+		glMaterialf(GL_FRONT, GL_SHININESS, 100.0);;
 
-
-	//glColor3f(BROWN);
-	// EAST wall
-	glCallList(EAST_WALL);
-
-	// WEST wall constructed by rotating the East wall by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glCallList(EAST_WALL);
-
-	glPopMatrix();
-	glPushMatrix();
-
-	// South wall
-	glCallList(SOUTH_WALL);
-
-	// NORTH wall constructed by rotating the South wall by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glCallList(SOUTH_WALL);
-
-	glPopMatrix();
-	glPopMatrix();
-
-	glPushMatrix();
-
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_roof);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_roof);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_roof);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0);;
-
-	glPushMatrix();
-
-	//glColor3f(GRAY);
-	// EAST roof
-	glCallList(EAST_ROOF);
-
-	// WEST roof constructed by rotation the East roof by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glCallList(EAST_ROOF);
-
-	glPopMatrix();
-	glPushMatrix();
-
-	// SOUTH roof
-	glCallList(SOUTH_ROOF);
-
-	// NORTH roof constructed by rotation the South roof by 180 deg @y axis
-	glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-	glCallList(SOUTH_ROOF);
-
-	glPopMatrix();
-
+		glCallList(EAST_ROOF);
+		glCallList(WEST_ROOF);
+		glCallList(SOUTH_ROOF);
+		glCallList(NORTH_ROOF);
+	}
 	glPopMatrix();
 }
 
@@ -326,10 +289,10 @@ void build_house(void)
 void build_grass(void)
 {
 	glColor3f(GRASS);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_grass);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_grass);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_grass);
+	glMaterialf(GL_FRONT, GL_SHININESS, 0.0);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_grass);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, spec_grass);
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_grass);
 
 	if (polygon_high) {
 		glCallLists(POLY_COUNT, GL_UNSIGNED_SHORT, ground_polygons_ids);
@@ -442,11 +405,19 @@ void init_lists(void)
 {
 	vector3f cross;
 
+	cross_product(cross, 
+		-5.0f, 10.0f, -10.0f, 
+		-5.0f, 10.0f, 10.0f,
+		-5.0f, 0.0f, 10.0f
+	);
+	normal(cross);
+
 	// East wall of the house
 	glNewList(EAST_WALL, GL_COMPILE);
 	{
 		glBegin(GL_POLYGON);
 		{
+			glNormal3fv(cross);
 			glVertex3f(-5.0f, 10.0f, -10.0f);
 			glVertex3f(-5.0f, 0.0f, -10.0f);
 			glVertex3f(-5.0f, 0.0f, 10.0f);
@@ -456,11 +427,36 @@ void init_lists(void)
 	}
 	glEndList();
 
+	cross[0] = -cross[0];
+
+	// West wall of the house
+	glNewList(WEST_WALL, GL_COMPILE);
+	{
+		glBegin(GL_POLYGON);
+		{
+			glNormal3fv(cross);
+			glVertex3f(5.0f, 10.0f, 10.0f);
+			glVertex3f(5.0f, 0.0f, 10.0f);
+			glVertex3f(5.0f, 0.0f, -10.0f);
+			glVertex3f(5.0f, 10.0f, -10.0f);
+		}
+		glEnd();
+	}
+	glEndList();
+
+	cross_product(cross,
+		-5.0f, 0.0f, 10.0f,
+		5.0f, 0.0f, 10.0f,
+		5.0f, 10.0f, 10.0f
+	);
+	normal(cross);
+
 	// South wall of the house
 	glNewList(SOUTH_WALL, GL_COMPILE);
 	{
 		glBegin(GL_POLYGON);
 		{
+			glNormal3fv(cross);
 			glVertex3f(-5.0f, 10.0f, 10.0f);
 			glVertex3f(-5.0f, 0.0f, 10.0f);
 			glVertex3f(5.0f, 0.0f, 10.0f);
@@ -470,11 +466,36 @@ void init_lists(void)
 	}
 	glEndList();
 
+	cross[2] = -cross[2];
+
+	// North wall of the house
+	glNewList(NORTH_WALL, GL_COMPILE);
+	{
+		glBegin(GL_POLYGON);
+		{
+			glNormal3fv(cross);
+			glVertex3f(5.0f, 10.0f, -10.0f);
+			glVertex3f(5.0f, 0.0f, -10.0f);
+			glVertex3f(-5.0f, 0.0f, -10.0f);
+			glVertex3f(-5.0f, 10.0f, -10.0f);
+		}
+		glEnd();
+	}
+	glEndList();
+
+	cross_product(cross,
+		-5.0f, 10.0f, -10.0f,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f
+	);
+	normal(cross);
+
 	// East roof of the house
 	glNewList(EAST_ROOF, GL_COMPILE);
 	{
 		glBegin(GL_POLYGON);
 		{
+			glNormal3fv(cross);
 			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f);
 			glVertex3f(-5.0f, 10.0f, -10.0f);
 			glVertex3f(-5.0f, 10.0f, 10.0f);
@@ -484,14 +505,61 @@ void init_lists(void)
 	}
 	glEndList();
 
+	cross[0] = -cross[0];
+	
+	// West roof of the house
+	glNewList(WEST_ROOF, GL_COMPILE);
+	{
+		glBegin(GL_POLYGON);
+		{
+			glNormal3fv(cross);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
+			glVertex3f(5.0f, 10.0f, 10.0f);
+			glVertex3f(5.0f, 10.0f, -10.0f);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f);
+		}
+		glEnd();
+	}
+	glEndList();
+
+	cross_product(cross,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f,
+		5.0f, 10.0f, 10.0f,
+		-5.0f, 10.0f, 10.0f
+	);
+	normal(cross);
+
 	// South roof of the house
 	glNewList(SOUTH_ROOF, GL_COMPILE);
 	{
 		glBegin(GL_POLYGON);
 		{
+			glNormal3fv(cross);
 			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
 			glVertex3f(-5.0f, 10.0f, 10.0f);
 			glVertex3f(5.0f, 10.0f, 10.0f);
+		}
+		glEnd();
+	}
+	glEndList();
+
+	
+	cross_product(cross,
+		-5.0f, 10.0f, -10.0f,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f,
+		5.0f, 10.0f, -10.0f
+	);
+	normal(cross);
+
+	// North roof of the house
+	glNewList(NORTH_ROOF, GL_COMPILE);
+	{
+		glBegin(GL_POLYGON);
+		{
+			glNormal3fv(cross);
+			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f);
+			glVertex3f(5.0f, 10.0f, -10.0f);
+			glVertex3f(-5.0f, 10.0f, -10.0f);
 		}
 		glEnd();
 	}
