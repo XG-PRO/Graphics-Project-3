@@ -196,8 +196,9 @@ void tetrahedron(int m) {
 		{0.816497f, -0.471405f, -0.333333f}
 	};
 	int i;
-	for (i = 0; i < 3; i++)
+	for (i = 0; i < 3; i++) {
 		position_sun[i] = (v[0][i] + v[1][i] + v[2][i] + v[3][i]) / 4;
+	}
 
 	//Take the points of the tetrahedron and divide it into 4 triangles
 	//Initiate subdivision on each one of them
@@ -240,18 +241,18 @@ void build_sun(void) {
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_sun);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_sun);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_sun);
-
-	//Create sun's light as a directional spotlight
-	glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
-
+	
 	//Rotate sun on the plane so it resemples dawn and dusk
 	glRotated(sun_angle, 0.0, 0.0, 1.0);
 	glTranslatef(-50.0, 0.0, 0.0);
 
 	//Create sun's polygons
 	tetrahedron(subdivision_count);
+
+	//Create sun's light as a directional spotlight
+	glLightfv(GL_LIGHT0, GL_POSITION, position_sun);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_sun);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, spec_sun);
 
 	glPopMatrix();
 }
@@ -262,20 +263,20 @@ void build_house(void)
 {
 	glPushMatrix();
 	{
-		glMaterialfv(GL_FRONT, GL_SPECULAR, spec_house);
-		glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_house);
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_house);
-		glMaterialf(GL_FRONT, GL_SHININESS, 0.0);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_house);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_house);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_house);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
 
 		glCallList(EAST_WALL);
 		glCallList(WEST_WALL);
 		glCallList(SOUTH_WALL);
 		glCallList(NORTH_WALL);
 
-		glMaterialfv(GL_FRONT, GL_SPECULAR, spec_roof);
-		glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_roof);
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_roof);
-		glMaterialf(GL_FRONT, GL_SHININESS, 100.0);;
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_roof);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_roof);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_roof);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0);;
 
 		glCallList(EAST_ROOF);
 		glCallList(WEST_ROOF);
@@ -566,9 +567,9 @@ void init_lists(void)
 	glEndList();
 
 	cross_product(cross,
-		-40.0f, 0.0f, 40.0f,
+		40.0f, 0.0f, -40.0f,
 		-40.0f, 0.0f, -40.0f,
-		40.0f, 0.0f, 40.0f
+		-40.0f, 0.0f, 40.0f
 	);
 	normal(cross);
 
@@ -579,14 +580,8 @@ void init_lists(void)
 		{
 			glNormal3fv(cross);
 			glVertex3f(-40.0f, 0.0f, -40.0f);
-
-			glNormal3fv(cross);
 			glVertex3f(-40.0f, 0.0f, 40.0f);
-
-			glNormal3fv(cross);
 			glVertex3f(40.0f, 0.0f, 40.0f);
-
-			glNormal3fv(cross);
 			glVertex3f(40.0f, 0.0f, -40.0f);
 		}
 		glEnd();
@@ -619,11 +614,8 @@ void init_lists(void)
 				{
 					glNormal3fv(cross);
 					glVertex3f(x_left, 0.0f, z_back);
-					glNormal3fv(cross);
 					glVertex3f(x_left, 0.0f, z_front);
-					glNormal3fv(cross);
 					glVertex3f(x_right, 0.0f, z_front);
-					glNormal3fv(cross);
 					glVertex3f(x_right, 0.0f, z_back);
 				}
 				glEnd();
