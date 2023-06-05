@@ -37,6 +37,7 @@
 volatile bool polygon_high = true;
 volatile bool spotlight_on = true;
 volatile bool smooth_shade = true;
+volatile bool mysterious = false;
 
 // Menu ids
 static int main_menu_id;
@@ -128,8 +129,8 @@ void cross_product(vector3f out,
 
 // ---------------------- SUN IMPLEMENTATION (START) --------------------- //
 
-//Normalization of a given point preserving signage
-void normal(point3f p) {
+//Normalization of a given point/vector preserving signage
+void normal(GLfloat p[3]) {
 	float d = 0.0f;
 	int i;
 	for (i = 0; i < 3; i++)
@@ -160,16 +161,16 @@ void divide_triangle(point3f a, point3f b, point3f c, int m)
 		{
 			v1[j] = a[j] + b[j];
 		}
-		normal(v1);
+		if (!mysterious) normal(v1);
 		for (j = 0; j < 3; j++)
 		{
 			v2[j] = a[j] + c[j];
 		}
-		normal(v2);
+		if (!mysterious) normal(v2);
 		for (j = 0; j < 3; j++) {
 			v3[j] = b[j] + c[j];
 		}
-		normal(v3);
+		if (!mysterious) normal(v3);
 
 		//Form said 4 new triangles with the new points and continue recursive subdivision
 		divide_triangle(a, v1, v2, m - 1);
@@ -203,10 +204,10 @@ void tetrahedron(int m) {
 	//Starting values for the tetrahedron
 	//These values are inverted so the sun moves opposite to its light source
 	point3f v[] = {
-		{0.0f, 0.0f, 1.0f},
-		{0.0f, 0.942809f, -0.33333f},
+		{0.0000000f, 0.0000000f, 1.0000000f},
+		{0.0000000f, 0.9428090f, -0.333333f},
 		{-0.816497f, -0.471405f, -0.333333f},
-		{0.816497f, -0.471405f, -0.333333f}
+		{0.8164970f, -0.471405f, -0.333333f}
 	};
 
 	//Take the points of the tetrahedron and divide it into 4 triangles
@@ -330,14 +331,12 @@ void display(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-60.0, 60.0, -60.0, 60.0, -300.0, 300.0);
-	// Camera is positioned on the circle:
-	// x^2 + z^2 = 70^2, y = 40
+	//	Camera is positioned on the sphere:
+	//		x^2 + y^2 + z^2 = 6500
 	gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
-	//glColor3f(1.0f, 1.0f, 1.0f);
 
 	if (smooth_shade)
 		glShadeModel(GL_SMOOTH);
@@ -393,7 +392,7 @@ void special_key_handler(int key, int x, int y)
 	static GLdouble angle_rad_vertical = 0.0f;
 	static const GLdouble ROTATION_STEP = 2.0;
 
-	// RIGHT and LEFT keys change the value of the angle, a.
+	// RIGHT and LEFT keys change the value of the angle v.
 	if (key == GLUT_KEY_LEFT) {
 		// Rotate camera towards positive direction by some deg @y axis
 		cam_angle_horizontal += ROTATION_STEP;
@@ -408,6 +407,7 @@ void special_key_handler(int key, int x, int y)
 			cam_angle_horizontal += 360.0;
 		}
 	}
+	// UP and DOWN keys change the value of the angle u.
 	else if (key == GLUT_KEY_UP) {
 		// Rotate camera towards negative direction by some deg @y axis
 		cam_angle_vertical += ROTATION_STEP;
@@ -435,6 +435,13 @@ void special_key_handler(int key, int x, int y)
 	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad_vertical) * cos(angle_rad_horizontal);
 
 	glutPostRedisplay();
+}
+
+void keyboard(unsigned char key, int x, int y)
+{
+	if (key == 'p' || key == 'P') {
+		mysterious = !mysterious;
+	}
 }
 
 void init_lists(void)
@@ -700,7 +707,7 @@ int main(int argc, char* argv[])
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// Black Background
 	glEnable(GL_LIGHTING);					// Lighting
 	glEnable(GL_LIGHT0);					// Light Source
-	//glEnable(GL_NORMALIZE);					// Normals Preservation for units
+	//glEnable(GL_NORMALIZE);				// Normals Preservation for units
 	//glEnable(GL_COLOR_MATERIAL);			// Make glColorf() as Material
 	glShadeModel(GL_SMOOTH);				// Smooth Shading Model
 
@@ -715,6 +722,7 @@ int main(int argc, char* argv[])
 	glutSpecialFunc(special_key_handler);
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
+	glutKeyboardFunc(keyboard);
 
 	// ----------- CALLBACK FUNCTIONS (END) ----------- //
 
