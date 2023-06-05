@@ -74,7 +74,7 @@ typedef GLfloat vector3f[3];
 
 //Sun Light and Materials
 static GLfloat sunlight = 0.3f;
-static GLfloat sunEmissionMaterial[] = { 0.5f, 0.5f, 0.0f, 1.0f };
+static GLfloat sunEmissionMaterial[] = { 0.2f, 0.2f, 0.0f, 1.0f };
 static GLfloat diffuse_sun[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 static GLfloat ambient_sun[] = { 1.0f, 1.0f, 0.0f, 1.0f };
 static GLfloat spec_sun[] = { 0.3f, 0.3f, 0.3f, 1.0f };
@@ -84,12 +84,12 @@ static GLfloat sun_angle = 0.0;
 
 //House Materials
 
-static GLfloat diffuse_house[] = { 0.2f, 0.1f, 0.1f, 1.0f };
-static GLfloat ambient_house[] = { 0.2f, 0.0f, 0.0f, 1.0f };
+static GLfloat diffuse_house[] = { 0.3f, 0.0f, 0.0f, 1.0f };
+static GLfloat ambient_house[] = { 0.3f, 0.0f, 0.0f, 1.0f };
 static GLfloat spec_house[] = { 0.0f, 0.0f, 0.0f, 1.0f };	//Matte surface
 
-static GLfloat diffuse_roof[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-static GLfloat ambient_roof[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static GLfloat diffuse_roof[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+static GLfloat ambient_roof[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 static GLfloat spec_roof[] = { 1.0f, 1.0f, 1.0f, 1.0f };	//Metallic surface
 
 //Grass Materials
@@ -276,7 +276,7 @@ void build_house(void)
 		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec_roof);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_roof);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_roof);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0);;
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0);
 
 		glCallList(EAST_ROOF);
 		glCallList(WEST_ROOF);
