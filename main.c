@@ -112,8 +112,8 @@ void cross_product(vector3f out,
 	GLfloat p10, GLfloat p11, GLfloat p12,
 	GLfloat p20, GLfloat p21, GLfloat p22)
 {
-	vector3f v1 = { p20 - p10, p21 - p11, p22 - p12 };
-	vector3f v2 = { p00 - p10, p01 - p11, p02 - p12 };
+	vector3f v2 = { p20 - p10, p21 - p11, p22 - p12 };
+	vector3f v1 = { p00 - p10, p01 - p11, p02 - p12 };
 
 	out[0] = v1[1] * v2[2] - v1[2] * v2[1];
 	out[1] = v1[2] * v2[0] - v1[0] * v2[2];
@@ -413,6 +413,8 @@ void init_lists(void)
 	);
 	normal(cross);
 
+	printf("(%f, %f, %f)\n", cross[0], cross[1], cross[2]);
+
 	// East wall of the house
 	glNewList(EAST_WALL, GL_COMPILE);
 	{
@@ -567,9 +569,9 @@ void init_lists(void)
 	glEndList();
 
 	cross_product(cross,
-		40.0f, 0.0f, -40.0f,
+		-40.0f, 0.0f, 40.0f,
 		-40.0f, 0.0f, -40.0f,
-		-40.0f, 0.0f, 40.0f
+		40.0f, 0.0f, -40.0f
 	);
 	normal(cross);
 
