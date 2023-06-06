@@ -37,7 +37,12 @@
 volatile bool polygon_high = true;
 volatile bool spotlight_on = true;
 volatile bool smooth_shade = true;
+
+// Keyboard optiions
 volatile bool shadows_on = false;
+volatile bool freeze_sun = false;
+volatile bool mystery_var = false;
+
 
 // Menu ids
 static int main_menu_id;
@@ -127,6 +132,15 @@ void cross_product(vector3f out,
 	out[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
+GLfloat shadow_check(GLfloat var, GLfloat limit1, GLfloat limit2) 
+{
+	if (var < limit1)
+		return limit1;
+	if (var > limit2)
+		return limit2;
+	return var;
+}
+
 void getShadow4f(point3f polygon_shadow[4],
 	GLfloat ax, GLfloat ay, GLfloat az,
 	GLfloat bx, GLfloat by, GLfloat bz,
@@ -134,31 +148,40 @@ void getShadow4f(point3f polygon_shadow[4],
 	GLfloat dx, GLfloat dy, GLfloat dz)
 {
 	GLdouble sun_angle_rad = (GLdouble)(-sun_angle) * M_PI / 180.0;
-	GLfloat sin_sun = (GLfloat)sin(sun_angle_rad);
+	GLfloat X;
+	GLfloat Z;
 	GLfloat t;
 
-	GLfloat Lx = 50.0f * (GLfloat)cos(sun_angle_rad);
-	GLfloat Ly = 50.0f * sin_sun;
+	GLfloat Lx = -50.0f * (GLfloat)cos(sun_angle_rad);
+	GLfloat Ly = 50.0f * (GLfloat)sin(sun_angle_rad);;
 
-	t = -sin_sun / (sin_sun - ay);
-	polygon_shadow[0][0] = (t + 1.0f) * Lx - t * ax;
-	polygon_shadow[0][1] = 0.0f;
-	polygon_shadow[0][2] = -t * az;
+	t = -Ly / (ay - Ly);
+	X = Lx + t * (ax - Lx);
+	Z = -t * az;
+	polygon_shadow[0][0] = shadow_check(X, -40.0f, 40.0f);
+	polygon_shadow[0][1] = 0.1f;
+	polygon_shadow[0][2] = shadow_check(Z, -40.0f, 40.0f);
 
-	t = -sin_sun / (sin_sun - by);
-	polygon_shadow[1][0] = (t + 1.0f) * Lx - t * bx;
-	polygon_shadow[1][1] = 0.0f;
-	polygon_shadow[1][2] = -t * bz;
+	t = -Ly / (by - Ly);
+	X = Lx + t * (bx - Lx);
+	Z = -t * bz;
+	polygon_shadow[1][0] = shadow_check(X, -40.0f, 40.0f);
+	polygon_shadow[1][1] = 0.1f;
+	polygon_shadow[1][2] = shadow_check(Z, -40.0f, 40.0f);
 
-	t = -sin_sun / (sin_sun - cy);
-	polygon_shadow[2][0] = (t + 1.0f) * Lx - t * cx;
-	polygon_shadow[2][1] = 0.0f;
-	polygon_shadow[2][2] = -t * cz;
+	t = -Ly / (cy - Ly);
+	X = Lx + t * (cx - Lx);
+	Z = -t * cz;
+	polygon_shadow[2][0] = shadow_check(X, -40.0f, 40.0f);
+	polygon_shadow[2][1] = 0.1f;
+	polygon_shadow[2][2] = shadow_check(Z, -40.0f, 40.0f);
 
-	t = -sin_sun / (sin_sun - dy);
-	polygon_shadow[3][0] = (t + 1.0f) * Lx - t * dx;
-	polygon_shadow[3][1] = 0.0f;
-	polygon_shadow[3][2] = -t * dz;
+	t = -Ly / (dy - Ly);
+	X = Lx + t * (dx - Lx);
+	Z = -t * dz;
+	polygon_shadow[3][0] = shadow_check(X, -40.0f, 40.0f);
+	polygon_shadow[3][1] = 0.1f;
+	polygon_shadow[3][2] = shadow_check(Z, -40.0f, 40.0f);
 }
 
 // ---------------------- SUN IMPLEMENTATION (START) --------------------- //
@@ -195,16 +218,18 @@ void divide_triangle(point3f a, point3f b, point3f c, int m)
 		{
 			v1[j] = a[j] + b[j];
 		}
-		normal(v1);
 		for (j = 0; j < 3; j++)
 		{
 			v2[j] = a[j] + c[j];
 		}
-		normal(v2);
 		for (j = 0; j < 3; j++) {
 			v3[j] = b[j] + c[j];
 		}
-		normal(v3);
+		if (!mystery_var) {
+			normal(v1);
+			normal(v2);
+			normal(v3);
+		}
 
 		//Form said 4 new triangles with the new points and continue recursive subdivision
 		divide_triangle(a, v1, v2, m - 1);
@@ -275,7 +300,8 @@ void update_sunlight(void) {
 void build_sun(void) {
 
 	//Update light attributes
-	update_sunlight();
+	if (!freeze_sun)
+		update_sunlight();
 
 	glPushMatrix();
 	{
@@ -347,12 +373,20 @@ void build_grass(void)
 }
 
 // Physical manifestation of the Shadows
-void build_shadows(void)
+void cast_shadows(void)
 {
 	point3f east_wall_shadow[4];
+	point3f south_wall_shadow[4];
+	point3f north_wall_shadow[4];
 	point3f west_wall_shadow[4];
 	point3f east_roof_shadow[4];
 	point3f west_roof_shadow[4];
+	point3f south_roof_shadow[4];
+	point3f north_roof_shadow[4];
+
+	if (sun_angle < -170.0f || sun_angle > -10.0f) {
+		return;
+	}
 	
 	getShadow4f(east_wall_shadow,
 		-5.0f, 10.0f, -10.0f,
@@ -366,20 +400,45 @@ void build_shadows(void)
 		5.0f, 0.0f, -10.0f,
 		5.0f, 10.0f, -10.0f
 	);
+	getShadow4f(south_wall_shadow,
+		-5.0f, 10.0f, 10.0f,
+		-5.0f, 0.0f, 10.0f,
+		5.0f, 0.0f, 10.0f,
+		5.0f, 10.0f, 10.0f
+	);
+	getShadow4f(north_wall_shadow,
+		5.0f, 10.0f, -10.0f,
+		5.0f, 0.0f, -10.0f,
+		-5.0f, 0.0f, -10.0f,
+		-5.0f, 10.0f, -10.0f
+	);
 	getShadow4f(east_roof_shadow,
 		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f,
 		-5.0f, 10.0f, -10.0f,
 		-5.0f, 10.0f, 10.0f,
 		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f
-	); 
+	);
 	getShadow4f(west_roof_shadow,
 		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f,
 		5.0f, 10.0f, 10.0f,
 		5.0f, 10.0f, -10.0f,
 		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f
 	);
+	getShadow4f(south_roof_shadow,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f,
+		-5.0f, 10.0f, 10.0f,
+		5.0f, 10.0f, 10.0f,
+		5.0f, 10.0f, 10.0f
+	);
+	getShadow4f(north_roof_shadow,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f,
+		5.0f, 10.0f, -10.0f,
+		-5.0f, 10.0f, -10.0f,
+		-5.0f, 10.0f, -10.0f
+	);
+	
+	glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
 
-	glColor3f(0.0f, 0.5f, 0.5f);
 	glBegin(GL_POLYGON);
 	{
 		glVertex3fv(east_wall_shadow[0]);
@@ -400,6 +459,24 @@ void build_shadows(void)
 
 	glBegin(GL_POLYGON);
 	{
+		glVertex3fv(south_wall_shadow[0]);
+		glVertex3fv(south_wall_shadow[1]);
+		glVertex3fv(south_wall_shadow[2]);
+		glVertex3fv(south_wall_shadow[3]);
+	}
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	{
+		glVertex3fv(north_wall_shadow[0]);
+		glVertex3fv(north_wall_shadow[1]);
+		glVertex3fv(north_wall_shadow[2]);
+		glVertex3fv(north_wall_shadow[3]);
+	}
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	{
 		glVertex3fv(east_roof_shadow[0]);
 		glVertex3fv(east_roof_shadow[1]);
 		glVertex3fv(east_roof_shadow[2]);
@@ -413,6 +490,22 @@ void build_shadows(void)
 		glVertex3fv(west_roof_shadow[1]);
 		glVertex3fv(west_roof_shadow[2]);
 		glVertex3fv(west_roof_shadow[3]);
+	}
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	{
+		glVertex3fv(south_roof_shadow[0]);
+		glVertex3fv(south_roof_shadow[1]);
+		glVertex3fv(south_roof_shadow[2]);
+	}
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	{
+		glVertex3fv(north_roof_shadow[0]);
+		glVertex3fv(north_roof_shadow[1]);
+		glVertex3fv(north_roof_shadow[2]);
 	}
 	glEnd();
 }
@@ -456,7 +549,7 @@ void display(void)
 
 	// Projection shadows
 	if (shadows_on)
-		build_shadows();
+		cast_shadows();
 
 	//Grass Creation
 	build_grass();
@@ -473,7 +566,8 @@ void display(void)
 void idle(void)
 {
 	// Update the sun's rotational angle but backwards to resemple correct day transition
-	sun_angle -= 0.5f;
+	if (!freeze_sun)
+		sun_angle -= 0.5f;
 	if (sun_angle <= -180.0f)
 		sun_angle = 0;
 
@@ -550,6 +644,12 @@ void keyboard(unsigned char key, int x, int y)
 {
 	if (key == 's' || key == 'S') {
 		shadows_on = !shadows_on;
+	}
+	else if (key == 'f' || key == 'F') {
+		freeze_sun = !freeze_sun;
+	}
+	else if (key == 'p' || key == 'P') {
+		mystery_var = !mystery_var;
 	}
 }
 
