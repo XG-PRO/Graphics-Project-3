@@ -37,7 +37,6 @@
 volatile bool polygon_high = true;
 volatile bool spotlight_on = true;
 volatile bool smooth_shade = true;
-volatile bool mysterious = false;
 
 // Menu ids
 static int main_menu_id;
@@ -161,16 +160,16 @@ void divide_triangle(point3f a, point3f b, point3f c, int m)
 		{
 			v1[j] = a[j] + b[j];
 		}
-		if (!mysterious) normal(v1);
+		normal(v1);
 		for (j = 0; j < 3; j++)
 		{
 			v2[j] = a[j] + c[j];
 		}
-		if (!mysterious) normal(v2);
+		normal(v2);
 		for (j = 0; j < 3; j++) {
 			v3[j] = b[j] + c[j];
 		}
-		if (!mysterious) normal(v3);
+		normal(v3);
 
 		//Form said 4 new triangles with the new points and continue recursive subdivision
 		divide_triangle(a, v1, v2, m - 1);
@@ -435,13 +434,6 @@ void special_key_handler(int key, int x, int y)
 	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad_vertical) * cos(angle_rad_horizontal);
 
 	glutPostRedisplay();
-}
-
-void keyboard(unsigned char key, int x, int y)
-{
-	if (key == 'p' || key == 'P') {
-		mysterious = !mysterious;
-	}
 }
 
 void init_lists(void)
@@ -722,7 +714,6 @@ int main(int argc, char* argv[])
 	glutSpecialFunc(special_key_handler);
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
-	glutKeyboardFunc(keyboard);
 
 	// ----------- CALLBACK FUNCTIONS (END) ----------- //
 
