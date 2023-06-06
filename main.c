@@ -37,6 +37,7 @@
 volatile bool polygon_high = true;
 volatile bool spotlight_on = true;
 volatile bool smooth_shade = true;
+volatile bool shadows_on = false;
 
 // Menu ids
 static int main_menu_id;
@@ -124,6 +125,40 @@ void cross_product(vector3f out,
 	out[0] = v1[1] * v2[2] - v1[2] * v2[1];
 	out[1] = v1[2] * v2[0] - v1[0] * v2[2];
 	out[2] = v1[0] * v2[1] - v1[1] * v2[0];
+}
+
+void getShadow4f(point3f polygon_shadow[4],
+	GLfloat ax, GLfloat ay, GLfloat az,
+	GLfloat bx, GLfloat by, GLfloat bz,
+	GLfloat cx, GLfloat cy, GLfloat cz,
+	GLfloat dx, GLfloat dy, GLfloat dz)
+{
+	GLdouble sun_angle_rad = (GLdouble)(-sun_angle) * M_PI / 180.0;
+	GLfloat sin_sun = (GLfloat)sin(sun_angle_rad);
+	GLfloat t;
+
+	GLfloat Lx = 50.0f * (GLfloat)cos(sun_angle_rad);
+	GLfloat Ly = 50.0f * sin_sun;
+
+	t = -sin_sun / (sin_sun - ay);
+	polygon_shadow[0][0] = (t + 1.0f) * Lx - t * ax;
+	polygon_shadow[0][1] = 0.0f;
+	polygon_shadow[0][2] = -t * az;
+
+	t = -sin_sun / (sin_sun - by);
+	polygon_shadow[1][0] = (t + 1.0f) * Lx - t * bx;
+	polygon_shadow[1][1] = 0.0f;
+	polygon_shadow[1][2] = -t * bz;
+
+	t = -sin_sun / (sin_sun - cy);
+	polygon_shadow[2][0] = (t + 1.0f) * Lx - t * cx;
+	polygon_shadow[2][1] = 0.0f;
+	polygon_shadow[2][2] = -t * cz;
+
+	t = -sin_sun / (sin_sun - dy);
+	polygon_shadow[3][0] = (t + 1.0f) * Lx - t * dx;
+	polygon_shadow[3][1] = 0.0f;
+	polygon_shadow[3][2] = -t * dz;
 }
 
 // ---------------------- SUN IMPLEMENTATION (START) --------------------- //
@@ -272,7 +307,7 @@ void build_house(void)
 		glMaterialfv(GL_FRONT, GL_SPECULAR, spec_house);
 		glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_house);
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_house);
-		glMaterialf(GL_FRONT, GL_SHININESS, 0.0);
+		glMaterialf(GL_FRONT, GL_SHININESS, 0.0f);
 
 		glCallList(EAST_WALL);
 		glCallList(WEST_WALL);
@@ -282,7 +317,7 @@ void build_house(void)
 		glMaterialfv(GL_FRONT, GL_SPECULAR, spec_roof);
 		glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_roof);
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_roof);
-		glMaterialf(GL_FRONT, GL_SHININESS, 100.0);
+		glMaterialf(GL_FRONT, GL_SHININESS, 100.0f);
 
 		glCallList(EAST_ROOF);
 		glCallList(WEST_ROOF);
@@ -296,7 +331,7 @@ void build_house(void)
 void build_grass(void)
 {
 	glColor3f(GRASS);
-	glMaterialf(GL_FRONT, GL_SHININESS, 0.0);
+	glMaterialf(GL_FRONT, GL_SHININESS, 0.0f);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_grass);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, spec_grass);
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_grass);
@@ -309,6 +344,77 @@ void build_grass(void)
 		// 1 big polygon
 		glCallList(GROUND);
 	}
+}
+
+// Physical manifestation of the Shadows
+void build_shadows(void)
+{
+	point3f east_wall_shadow[4];
+	point3f west_wall_shadow[4];
+	point3f east_roof_shadow[4];
+	point3f west_roof_shadow[4];
+	
+	getShadow4f(east_wall_shadow,
+		-5.0f, 10.0f, -10.0f,
+		-5.0f, 0.0f, -10.0f,
+		-5.0f, 0.0f, 10.0f,
+		-5.0f, 10.0f, 10.0f
+	);
+	getShadow4f(west_wall_shadow,
+		5.0f, 10.0f, 10.0f,
+		5.0f, 0.0f, 10.0f,
+		5.0f, 0.0f, -10.0f,
+		5.0f, 10.0f, -10.0f
+	);
+	getShadow4f(east_roof_shadow,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f,
+		-5.0f, 10.0f, -10.0f,
+		-5.0f, 10.0f, 10.0f,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f
+	); 
+	getShadow4f(west_roof_shadow,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f,
+		5.0f, 10.0f, 10.0f,
+		5.0f, 10.0f, -10.0f,
+		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f
+	);
+
+	glColor3f(0.0f, 0.5f, 0.5f);
+	glBegin(GL_POLYGON);
+	{
+		glVertex3fv(east_wall_shadow[0]);
+		glVertex3fv(east_wall_shadow[1]);
+		glVertex3fv(east_wall_shadow[2]);
+		glVertex3fv(east_wall_shadow[3]);
+	}
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	{
+		glVertex3fv(west_wall_shadow[0]);
+		glVertex3fv(west_wall_shadow[1]);
+		glVertex3fv(west_wall_shadow[2]);
+		glVertex3fv(west_wall_shadow[3]);
+	}
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	{
+		glVertex3fv(east_roof_shadow[0]);
+		glVertex3fv(east_roof_shadow[1]);
+		glVertex3fv(east_roof_shadow[2]);
+		glVertex3fv(east_roof_shadow[3]);
+	}
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	{
+		glVertex3fv(west_roof_shadow[0]);
+		glVertex3fv(west_roof_shadow[1]);
+		glVertex3fv(west_roof_shadow[2]);
+		glVertex3fv(west_roof_shadow[3]);
+	}
+	glEnd();
 }
 
 // Spotlight implementation
@@ -348,6 +454,10 @@ void display(void)
 	//Sun Creation
 	build_sun();
 
+	// Projection shadows
+	if (shadows_on)
+		build_shadows();
+
 	//Grass Creation
 	build_grass();
 
@@ -381,7 +491,7 @@ void idle(void)
 *		- y(u,v) = r * sin(u)
 *		- z(u,v) = r * cos(u) * cos(v)
 * 
-*	The camera's initial location is at (0, 40, 70)
+*	The camera's initial location is at (0, 40, 70).
 *	The circle x^2 + z^2 = 70^2, y = 40 is entirely
 *	contained into the aforementioned sphere.
 */
@@ -434,6 +544,13 @@ void special_key_handler(int key, int x, int y)
 	cam_pos[2] = RADIUS_CAMERA * cos(angle_rad_vertical) * cos(angle_rad_horizontal);
 
 	glutPostRedisplay();
+}
+
+void keyboard(unsigned char key, int x, int y)
+{
+	if (key == 's' || key == 'S') {
+		shadows_on = !shadows_on;
+	}
 }
 
 void init_lists(void)
@@ -714,6 +831,7 @@ int main(int argc, char* argv[])
 	glutSpecialFunc(special_key_handler);
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
+	glutKeyboardFunc(keyboard);
 
 	// ----------- CALLBACK FUNCTIONS (END) ----------- //
 
