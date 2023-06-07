@@ -371,6 +371,7 @@ void update_sunlight(void)
 		sun_angle_rad = (GLdouble)(-sun_angle) * M_PI / 180.0;
 		light_source_pos[0] = -50.0f * (GLfloat)cos(sun_angle_rad);
 		light_source_pos[1] = 50.0f * (GLfloat)sin(sun_angle_rad);
+		printf("angle = %.4lf: (%.3f, %.3f, %.3f)\n", sun_angle, light_source_pos[0], light_source_pos[1], 0.0f);
 	}
 
 	//Update light respectively
