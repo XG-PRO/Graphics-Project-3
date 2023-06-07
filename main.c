@@ -211,8 +211,8 @@ void cast_shadows(void)
 	point3f west_wall_shadow[4];
 	point3f east_roof_shadow[4];
 	point3f west_roof_shadow[4];
-	point3f south_roof_shadow[4];
-	point3f north_roof_shadow[4];
+	point3f south_roof_shadow[3];
+	point3f north_roof_shadow[3];
 
 	point3f* quads[6] = {
 		east_wall_shadow, south_wall_shadow, north_wall_shadow,
@@ -222,9 +222,11 @@ void cast_shadows(void)
 		south_roof_shadow, north_roof_shadow
 	};
 
-	//if (sun_angle < -150.0f || sun_angle > -30.0f) {
-		//return;
-	//}
+	if (sun_angle < -158.0f || sun_angle > -22.0f) {
+		return;
+	}
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
 
 	getShadow4f(east_wall_shadow, EAST_WALL_COORDINATES);
 	getShadow4f(west_wall_shadow, WEST_WALL_COORDINATES);
@@ -258,6 +260,7 @@ void cast_shadows(void)
 		}
 		glEnd();
 	}
+	glDisable(GL_BLEND);
 }
 // ---------------------- SHADOW IMPLEMENTATION (END) ---------------------- //
 
