@@ -11,15 +11,15 @@
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 800
 
-#define EAST_WALL   0b0001
-#define WEST_WALL	0b0010
-#define SOUTH_WALL  0b0011
-#define NORTH_WALL	0b0100
-#define EAST_ROOF   0b0101
-#define WEST_ROOF	0b0110
-#define SOUTH_ROOF  0b0111
-#define NORTH_ROOF	0b1000
-#define GROUND      0b1001
+#define EAST_WALL   1
+#define WEST_WALL   2
+#define SOUTH_WALL  3
+#define NORTH_WALL  4
+#define EAST_ROOF   5
+#define WEST_ROOF   6
+#define SOUTH_ROOF  7
+#define NORTH_ROOF  8
+#define GROUND      9
 
 #define RADIUS_CAMERA 80.62257748298549
 
@@ -38,7 +38,7 @@ volatile bool polygon_high = true;
 volatile bool spotlight_on = true;
 volatile bool smooth_shade = true;
 
-// Keyboard optiions
+// Keyboard options
 volatile bool shadows_on = false;
 volatile bool freeze_sun = false;
 volatile bool mystery_var = false;
@@ -82,15 +82,16 @@ typedef GLfloat vector3f[3];
 //diaxiti = diffuse
 //periballontos fotos = ambient
 
-//Sun Light and Materials
+// Sun Light and Materials
 static GLfloat sunlight = 0.3f;
 static GLfloat sunEmissionMaterial[] = { 0.2f, 0.2f, 0.0f, 1.0f };
 static GLfloat diffuse_sun[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 static GLfloat spec_sun[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 static GLfloat position_sun[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static GLfloat light_source_pos[] = { -50.0f, 0.0f, 0.0f };
 static GLfloat sun_angle = 0.0;
 
-//House Materials
+// House Materials
 static GLfloat diffuse_house[] = { 0.3f, 0.0f, 0.0f, 1.0f };
 static GLfloat ambient_house[] = { 0.3f, 0.0f, 0.0f, 1.0f };
 static GLfloat spec_house[] = { 0.0f, 0.0f, 0.0f, 1.0f };	//Matte surface
@@ -99,17 +100,34 @@ static GLfloat diffuse_roof[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 static GLfloat ambient_roof[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 static GLfloat spec_roof[] = { 1.0f, 1.0f, 1.0f, 1.0f };	//Metallic surface
 
-//Grass Materials
+// Grass Materials
 static GLfloat diffuse_grass[] = { 0.3f, 1.0f, 0.3f, 0.3f }; // 0.3 last param?
 static GLfloat ambient_grass[] = { 0.3f, 1.0f, 0.3f, 0.0f };
 static GLfloat spec_grass[] = { 0.0f, 0.0f, 0.0f, 0.0f };	//Matte surface
 
-//Spotlight Light
+// Shadows
+static GLfloat diffuse_shadow[] = { 0.0f, 0.0f, 0.0f, 0.1f };
+static GLfloat ambient_shadow[] = { 0.0f, 0.0f, 0.0f, 0.1f };
+static GLfloat spec_shadow[] = { 0.0f, 0.0f, 0.0f, 0.1f };
+
+// Spotlight Light
 static GLfloat diffuse_spotlight[] = { 1.0f , 1.0f, 1.0f, 1.0f };
 static GLfloat ambient_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat spec_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
 static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
+
+
+// All displayed polygons of the world (except sun)
+extern const point3f EAST_WALL_COORDINATES[4];
+extern const point3f WEST_WALL_COORDINATES[4];
+extern const point3f SOUTH_WALL_COORDINATES[4];
+extern const point3f NORTH_WALL_COORDINATES[4];
+extern const point3f EAST_ROOF_COORDINATES[4];
+extern const point3f WEST_ROOF_COORDINATES[4];
+extern const point3f SOUTH_ROOF_COORDINATES[3];
+extern const point3f NORTH_ROOF_COORDINATES[3];
+extern const point3f GROUND_COORDINATES[4];
 
 /*
 *	Suppose three points p0, p1, p2.
@@ -132,6 +150,9 @@ void cross_product(vector3f out,
 	out[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
+
+// ---------------------- SHADOW IMPLEMENTATION (START) ---------------------- //
+
 GLfloat shadow_check(GLfloat var, GLfloat limit1, GLfloat limit2) 
 {
 	if (var < limit1)
@@ -141,48 +162,104 @@ GLfloat shadow_check(GLfloat var, GLfloat limit1, GLfloat limit2)
 	return var;
 }
 
-void getShadow4f(point3f polygon_shadow[4],
-	GLfloat ax, GLfloat ay, GLfloat az,
-	GLfloat bx, GLfloat by, GLfloat bz,
-	GLfloat cx, GLfloat cy, GLfloat cz,
-	GLfloat dx, GLfloat dy, GLfloat dz)
+void getShadow3f(point3f polygon_shadow[3], const point3f polygon[3])
 {
-	GLdouble sun_angle_rad = (GLdouble)(-sun_angle) * M_PI / 180.0;
 	GLfloat X;
 	GLfloat Z;
 	GLfloat t;
 
-	GLfloat Lx = -50.0f * (GLfloat)cos(sun_angle_rad);
-	GLfloat Ly = 50.0f * (GLfloat)sin(sun_angle_rad);;
+	GLfloat Lx = light_source_pos[0];
+	GLfloat Ly = light_source_pos[1];
 
-	t = -Ly / (ay - Ly);
-	X = Lx + t * (ax - Lx);
-	Z = -t * az;
-	polygon_shadow[0][0] = shadow_check(X, -40.0f, 40.0f);
-	polygon_shadow[0][1] = 0.1f;
-	polygon_shadow[0][2] = shadow_check(Z, -40.0f, 40.0f);
-
-	t = -Ly / (by - Ly);
-	X = Lx + t * (bx - Lx);
-	Z = -t * bz;
-	polygon_shadow[1][0] = shadow_check(X, -40.0f, 40.0f);
-	polygon_shadow[1][1] = 0.1f;
-	polygon_shadow[1][2] = shadow_check(Z, -40.0f, 40.0f);
-
-	t = -Ly / (cy - Ly);
-	X = Lx + t * (cx - Lx);
-	Z = -t * cz;
-	polygon_shadow[2][0] = shadow_check(X, -40.0f, 40.0f);
-	polygon_shadow[2][1] = 0.1f;
-	polygon_shadow[2][2] = shadow_check(Z, -40.0f, 40.0f);
-
-	t = -Ly / (dy - Ly);
-	X = Lx + t * (dx - Lx);
-	Z = -t * dz;
-	polygon_shadow[3][0] = shadow_check(X, -40.0f, 40.0f);
-	polygon_shadow[3][1] = 0.1f;
-	polygon_shadow[3][2] = shadow_check(Z, -40.0f, 40.0f);
+	for (int i = 0; i < 3; ++i)
+	{
+		t = -Ly / (polygon[i][1] - Ly);
+		X = Lx + t * (polygon[i][0] - Lx);
+		Z = -t * polygon[i][2];
+		polygon_shadow[i][0] = shadow_check(X, -40.0f, 40.0f);
+		polygon_shadow[i][1] = 0.1f;
+		polygon_shadow[i][2] = shadow_check(Z, -40.0f, 40.0f);
+	}
 }
+
+void getShadow4f(point3f polygon_shadow[4], const point3f polygon[4])
+{
+	GLfloat X;
+	GLfloat Z;
+	GLfloat t;
+
+	GLfloat Lx = light_source_pos[0];
+	GLfloat Ly = light_source_pos[1];
+
+	for (int i = 0; i < 4; ++i) 
+	{
+		t = -Ly / (polygon[i][1] - Ly);
+		X = Lx + t * (polygon[i][0] - Lx);
+		Z = -t * polygon[i][2];
+		polygon_shadow[i][0] = shadow_check(X, -40.0f, 40.0f);
+		polygon_shadow[i][1] = 0.1f;
+		polygon_shadow[i][2] = shadow_check(Z, -40.0f, 40.0f);
+	}
+}
+
+// Physical manifestation of the Shadows
+void cast_shadows(void)
+{
+	point3f east_wall_shadow[4];
+	point3f south_wall_shadow[4];
+	point3f north_wall_shadow[4];
+	point3f west_wall_shadow[4];
+	point3f east_roof_shadow[4];
+	point3f west_roof_shadow[4];
+	point3f south_roof_shadow[4];
+	point3f north_roof_shadow[4];
+
+	point3f* quads[6] = {
+		east_wall_shadow, south_wall_shadow, north_wall_shadow,
+		west_wall_shadow, east_roof_shadow, west_roof_shadow
+	};
+	point3f* triangles[2] = {
+		south_roof_shadow, north_roof_shadow
+	};
+
+	//if (sun_angle < -150.0f || sun_angle > -30.0f) {
+		//return;
+	//}
+
+	getShadow4f(east_wall_shadow, EAST_WALL_COORDINATES);
+	getShadow4f(west_wall_shadow, WEST_WALL_COORDINATES);
+	getShadow4f(south_wall_shadow, SOUTH_WALL_COORDINATES);
+	getShadow4f(north_wall_shadow, NORTH_WALL_COORDINATES);
+	getShadow4f(east_roof_shadow, EAST_ROOF_COORDINATES);
+	getShadow4f(west_roof_shadow, WEST_ROOF_COORDINATES);
+	getShadow3f(south_roof_shadow, SOUTH_ROOF_COORDINATES);
+	getShadow3f(north_roof_shadow, NORTH_ROOF_COORDINATES);
+
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_shadow);
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_shadow);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, spec_shadow);
+
+	for (int i = 0; i < 6; ++i) {
+		glBegin(GL_POLYGON);
+		{
+			glVertex3fv(quads[i][0]);
+			glVertex3fv(quads[i][1]);
+			glVertex3fv(quads[i][2]);
+			glVertex3fv(quads[i][3]);
+		}
+		glEnd();
+	}
+	for (int i = 0; i < 2; ++i) {
+		glBegin(GL_POLYGON);
+		{
+			glVertex3fv(triangles[i][0]);
+			glVertex3fv(triangles[i][1]);
+			glVertex3fv(triangles[i][2]);
+		}
+		glEnd();
+	}
+}
+// ---------------------- SHADOW IMPLEMENTATION (END) ---------------------- //
 
 // ---------------------- SUN IMPLEMENTATION (START) --------------------- //
 
@@ -278,8 +355,9 @@ void tetrahedron(int m) {
 }
 
 //Update the sun light's color and intensity
-void update_sunlight(void) {
-
+void update_sunlight(void) 
+{
+	GLdouble sun_angle_rad;
 	//Sun rotates backwards
 	//Start increasing the intensity until the sun reaches the top of the plane
 	//Start decreasing the intensity after the sun reaches the top of the plane
@@ -287,6 +365,13 @@ void update_sunlight(void) {
 		sunlight += 0.7f / 90;
 	else
 		sunlight -= 0.7f / 90;
+
+	if (shadows_on) 
+	{
+		sun_angle_rad = (GLdouble)(-sun_angle) * M_PI / 180.0;
+		light_source_pos[0] = -50.0f * (GLfloat)cos(sun_angle_rad);
+		light_source_pos[1] = 50.0f * (GLfloat)sin(sun_angle_rad);
+	}
 
 	//Update light respectively
 	for (int i = 0; i < 3; i++)
@@ -297,8 +382,8 @@ void update_sunlight(void) {
 }
 
 // Physical manifestation of the Sun
-void build_sun(void) {
-
+void build_sun(void) 
+{
 	//Update light attributes
 	if (!freeze_sun)
 		update_sunlight();
@@ -370,144 +455,6 @@ void build_grass(void)
 		// 1 big polygon
 		glCallList(GROUND);
 	}
-}
-
-// Physical manifestation of the Shadows
-void cast_shadows(void)
-{
-	point3f east_wall_shadow[4];
-	point3f south_wall_shadow[4];
-	point3f north_wall_shadow[4];
-	point3f west_wall_shadow[4];
-	point3f east_roof_shadow[4];
-	point3f west_roof_shadow[4];
-	point3f south_roof_shadow[4];
-	point3f north_roof_shadow[4];
-
-	if (sun_angle < -170.0f || sun_angle > -10.0f) {
-		return;
-	}
-	
-	getShadow4f(east_wall_shadow,
-		-5.0f, 10.0f, -10.0f,
-		-5.0f, 0.0f, -10.0f,
-		-5.0f, 0.0f, 10.0f,
-		-5.0f, 10.0f, 10.0f
-	);
-	getShadow4f(west_wall_shadow,
-		5.0f, 10.0f, 10.0f,
-		5.0f, 0.0f, 10.0f,
-		5.0f, 0.0f, -10.0f,
-		5.0f, 10.0f, -10.0f
-	);
-	getShadow4f(south_wall_shadow,
-		-5.0f, 10.0f, 10.0f,
-		-5.0f, 0.0f, 10.0f,
-		5.0f, 0.0f, 10.0f,
-		5.0f, 10.0f, 10.0f
-	);
-	getShadow4f(north_wall_shadow,
-		5.0f, 10.0f, -10.0f,
-		5.0f, 0.0f, -10.0f,
-		-5.0f, 0.0f, -10.0f,
-		-5.0f, 10.0f, -10.0f
-	);
-	getShadow4f(east_roof_shadow,
-		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f,
-		-5.0f, 10.0f, -10.0f,
-		-5.0f, 10.0f, 10.0f,
-		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f
-	);
-	getShadow4f(west_roof_shadow,
-		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f,
-		5.0f, 10.0f, 10.0f,
-		5.0f, 10.0f, -10.0f,
-		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f
-	);
-	getShadow4f(south_roof_shadow,
-		0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f,
-		-5.0f, 10.0f, 10.0f,
-		5.0f, 10.0f, 10.0f,
-		5.0f, 10.0f, 10.0f
-	);
-	getShadow4f(north_roof_shadow,
-		0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f,
-		5.0f, 10.0f, -10.0f,
-		-5.0f, 10.0f, -10.0f,
-		-5.0f, 10.0f, -10.0f
-	);
-	
-	glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
-
-	glBegin(GL_POLYGON);
-	{
-		glVertex3fv(east_wall_shadow[0]);
-		glVertex3fv(east_wall_shadow[1]);
-		glVertex3fv(east_wall_shadow[2]);
-		glVertex3fv(east_wall_shadow[3]);
-	}
-	glEnd();
-
-	glBegin(GL_POLYGON);
-	{
-		glVertex3fv(west_wall_shadow[0]);
-		glVertex3fv(west_wall_shadow[1]);
-		glVertex3fv(west_wall_shadow[2]);
-		glVertex3fv(west_wall_shadow[3]);
-	}
-	glEnd();
-
-	glBegin(GL_POLYGON);
-	{
-		glVertex3fv(south_wall_shadow[0]);
-		glVertex3fv(south_wall_shadow[1]);
-		glVertex3fv(south_wall_shadow[2]);
-		glVertex3fv(south_wall_shadow[3]);
-	}
-	glEnd();
-
-	glBegin(GL_POLYGON);
-	{
-		glVertex3fv(north_wall_shadow[0]);
-		glVertex3fv(north_wall_shadow[1]);
-		glVertex3fv(north_wall_shadow[2]);
-		glVertex3fv(north_wall_shadow[3]);
-	}
-	glEnd();
-
-	glBegin(GL_POLYGON);
-	{
-		glVertex3fv(east_roof_shadow[0]);
-		glVertex3fv(east_roof_shadow[1]);
-		glVertex3fv(east_roof_shadow[2]);
-		glVertex3fv(east_roof_shadow[3]);
-	}
-	glEnd();
-
-	glBegin(GL_POLYGON);
-	{
-		glVertex3fv(west_roof_shadow[0]);
-		glVertex3fv(west_roof_shadow[1]);
-		glVertex3fv(west_roof_shadow[2]);
-		glVertex3fv(west_roof_shadow[3]);
-	}
-	glEnd();
-
-	glBegin(GL_POLYGON);
-	{
-		glVertex3fv(south_roof_shadow[0]);
-		glVertex3fv(south_roof_shadow[1]);
-		glVertex3fv(south_roof_shadow[2]);
-	}
-	glEnd();
-
-	glBegin(GL_POLYGON);
-	{
-		glVertex3fv(north_roof_shadow[0]);
-		glVertex3fv(north_roof_shadow[1]);
-		glVertex3fv(north_roof_shadow[2]);
-	}
-	glEnd();
 }
 
 // Spotlight implementation
@@ -670,10 +617,10 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(-5.0f, 10.0f, -10.0f);
-			glVertex3f(-5.0f, 0.0f, -10.0f);
-			glVertex3f(-5.0f, 0.0f, 10.0f);
-			glVertex3f(-5.0f, 10.0f, 10.0f);
+			glVertex3fv(EAST_WALL_COORDINATES[0]);
+			glVertex3fv(EAST_WALL_COORDINATES[1]);
+			glVertex3fv(EAST_WALL_COORDINATES[2]);
+			glVertex3fv(EAST_WALL_COORDINATES[3]);
 		}
 		glEnd();
 	}
@@ -687,10 +634,10 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(5.0f, 10.0f, 10.0f);
-			glVertex3f(5.0f, 0.0f, 10.0f);
-			glVertex3f(5.0f, 0.0f, -10.0f);
-			glVertex3f(5.0f, 10.0f, -10.0f);
+			glVertex3fv(WEST_WALL_COORDINATES[0]);
+			glVertex3fv(WEST_WALL_COORDINATES[1]);
+			glVertex3fv(WEST_WALL_COORDINATES[2]);
+			glVertex3fv(WEST_WALL_COORDINATES[3]);
 		}
 		glEnd();
 	}
@@ -709,10 +656,10 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(-5.0f, 10.0f, 10.0f);
-			glVertex3f(-5.0f, 0.0f, 10.0f);
-			glVertex3f(5.0f, 0.0f, 10.0f);
-			glVertex3f(5.0f, 10.0f, 10.0f);
+			glVertex3fv(SOUTH_WALL_COORDINATES[0]);
+			glVertex3fv(SOUTH_WALL_COORDINATES[1]);
+			glVertex3fv(SOUTH_WALL_COORDINATES[2]);
+			glVertex3fv(SOUTH_WALL_COORDINATES[3]);
 		}
 		glEnd();
 	}
@@ -726,10 +673,10 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(5.0f, 10.0f, -10.0f);
-			glVertex3f(5.0f, 0.0f, -10.0f);
-			glVertex3f(-5.0f, 0.0f, -10.0f);
-			glVertex3f(-5.0f, 10.0f, -10.0f);
+			glVertex3fv(NORTH_WALL_COORDINATES[0]);
+			glVertex3fv(NORTH_WALL_COORDINATES[1]);
+			glVertex3fv(NORTH_WALL_COORDINATES[2]);
+			glVertex3fv(NORTH_WALL_COORDINATES[3]);
 		}
 		glEnd();
 	}
@@ -748,10 +695,10 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f);
-			glVertex3f(-5.0f, 10.0f, -10.0f);
-			glVertex3f(-5.0f, 10.0f, 10.0f);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
+			glVertex3fv(EAST_ROOF_COORDINATES[0]);
+			glVertex3fv(EAST_ROOF_COORDINATES[1]);
+			glVertex3fv(EAST_ROOF_COORDINATES[2]);
+			glVertex3fv(EAST_ROOF_COORDINATES[3]);
 		}
 		glEnd();
 	}
@@ -765,10 +712,10 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
-			glVertex3f(5.0f, 10.0f, 10.0f);
-			glVertex3f(5.0f, 10.0f, -10.0f);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f);
+			glVertex3fv(WEST_ROOF_COORDINATES[0]);
+			glVertex3fv(WEST_ROOF_COORDINATES[1]);
+			glVertex3fv(WEST_ROOF_COORDINATES[2]);
+			glVertex3fv(WEST_ROOF_COORDINATES[3]);
 		}
 		glEnd();
 	}
@@ -787,9 +734,9 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f);
-			glVertex3f(-5.0f, 10.0f, 10.0f);
-			glVertex3f(5.0f, 10.0f, 10.0f);
+			glVertex3fv(SOUTH_ROOF_COORDINATES[0]);
+			glVertex3fv(SOUTH_ROOF_COORDINATES[1]);
+			glVertex3fv(SOUTH_ROOF_COORDINATES[2]);
 		}
 		glEnd();
 	}
@@ -803,9 +750,9 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(0.0f, (GLfloat)SQRT_75_PLUS_10, -10.0f);
-			glVertex3f(5.0f, 10.0f, -10.0f);
-			glVertex3f(-5.0f, 10.0f, -10.0f);
+			glVertex3fv(NORTH_ROOF_COORDINATES[0]);
+			glVertex3fv(NORTH_ROOF_COORDINATES[1]);
+			glVertex3fv(NORTH_ROOF_COORDINATES[2]);
 		}
 		glEnd();
 	}
@@ -824,10 +771,10 @@ void init_lists(void)
 		glBegin(GL_POLYGON);
 		{
 			glNormal3fv(cross);
-			glVertex3f(-40.0f, 0.0f, -40.0f);
-			glVertex3f(-40.0f, 0.0f, 40.0f);
-			glVertex3f(40.0f, 0.0f, 40.0f);
-			glVertex3f(40.0f, 0.0f, -40.0f);
+			glVertex3fv(GROUND_COORDINATES[0]);
+			glVertex3fv(GROUND_COORDINATES[1]);
+			glVertex3fv(GROUND_COORDINATES[2]);
+			glVertex3fv(GROUND_COORDINATES[3]);
 		}
 		glEnd();
 	}
