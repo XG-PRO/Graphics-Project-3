@@ -106,8 +106,8 @@ static GLfloat ambient_grass[] = { 0.3f, 1.0f, 0.3f, 0.0f };
 static GLfloat spec_grass[] = { 0.0f, 0.0f, 0.0f, 0.0f };	//Matte surface
 
 // Shadows
-static GLfloat diffuse_shadow[] = { 0.0f, 0.0f, 0.0f, 0.1f };
-static GLfloat ambient_shadow[] = { 0.0f, 0.0f, 0.0f, 0.1f };
+static GLfloat diffuse_shadow[] = { 0.2f, 0.2f, 0.2f, 0.1f };
+static GLfloat ambient_shadow[] = { 0.2f, 0.2f, 0.2f, 0.1f };
 static GLfloat spec_shadow[] = { 0.0f, 0.0f, 0.0f, 0.1f };
 
 // Spotlight Light
@@ -153,19 +153,46 @@ void cross_product(vector3f out,
 
 // ---------------------- SHADOW IMPLEMENTATION (START) ---------------------- //
 
-GLfloat shadow_check(GLfloat var, GLfloat limit1, GLfloat limit2) 
+void shadow_check_4(point3f polygon_shadow[4], int len, GLfloat limit1, GLfloat limit2)
 {
-	if (var < limit1)
-		return limit1;
-	if (var > limit2)
-		return limit2;
-	return var;
+	GLfloat t;
+	point3f *a;
+	point3f *b;
+
+	for (int i = 0; i < 4; ++i) 
+	{
+		a = &polygon_shadow[i];
+		b = &polygon_shadow[(i + 1) % 4];
+
+		if (*b[0] < limit1)
+		{
+			t = (limit1 - *a[0]) / (*b[0] - *a[0]);
+			*b[0] = limit1;
+			*b[2] = *a[2] + t * (*b[2] - *a[2]);
+		}
+		if (*b[0] > limit2)
+		{
+			t = (limit2 - *a[0]) / (*b[0] - *a[0]);
+			*b[0] = limit2;
+			*b[2] = *a[2] + t * (*b[2] - *a[2]);
+		}
+		if (*b[2] < limit1)
+		{
+			t = (limit1 - *a[2]) / (*b[2] - *a[2]);
+			*b[0] = *a[2] + t * (*b[2] - *a[2]);
+			*b[2] = limit1;
+		}
+		if (*b[0] > limit2)
+		{
+			t = (limit2 - *a[2]) / (*b[2] - *a[2]);
+			*b[0] = *a[2] + t * (*b[2] - *a[2]);
+			*b[2] = limit2;
+		}
+	}
 }
 
 void getShadow3f(point3f polygon_shadow[3], const point3f polygon[3])
 {
-	GLfloat X;
-	GLfloat Z;
 	GLfloat t;
 
 	GLfloat Lx = light_source_pos[0];
@@ -174,18 +201,15 @@ void getShadow3f(point3f polygon_shadow[3], const point3f polygon[3])
 	for (int i = 0; i < 3; ++i)
 	{
 		t = -Ly / (polygon[i][1] - Ly);
-		X = Lx + t * (polygon[i][0] - Lx);
-		Z = -t * polygon[i][2];
-		polygon_shadow[i][0] = shadow_check(X, -40.0f, 40.0f);
+		polygon_shadow[i][0] = Lx + t * (polygon[i][0] - Lx);
 		polygon_shadow[i][1] = 0.1f;
-		polygon_shadow[i][2] = shadow_check(Z, -40.0f, 40.0f);
+		polygon_shadow[i][2] = -t * polygon[i][2];
 	}
+	shadow_check(polygon_shadow, 3, -40.0f, 40.0f);
 }
 
 void getShadow4f(point3f polygon_shadow[4], const point3f polygon[4])
 {
-	GLfloat X;
-	GLfloat Z;
 	GLfloat t;
 
 	GLfloat Lx = light_source_pos[0];
@@ -194,12 +218,11 @@ void getShadow4f(point3f polygon_shadow[4], const point3f polygon[4])
 	for (int i = 0; i < 4; ++i) 
 	{
 		t = -Ly / (polygon[i][1] - Ly);
-		X = Lx + t * (polygon[i][0] - Lx);
-		Z = -t * polygon[i][2];
-		polygon_shadow[i][0] = shadow_check(X, -40.0f, 40.0f);
+		polygon_shadow[i][0] = Lx + t * (polygon[i][0] - Lx);
 		polygon_shadow[i][1] = 0.1f;
-		polygon_shadow[i][2] = shadow_check(Z, -40.0f, 40.0f);
+		polygon_shadow[i][2] = -t * polygon[i][2];
 	}
+	shadow_check(polygon_shadow, 4, -40.0f, 40.0f);
 }
 
 // Physical manifestation of the Shadows
@@ -244,6 +267,7 @@ void cast_shadows(void)
 	for (int i = 0; i < 6; ++i) {
 		glBegin(GL_POLYGON);
 		{
+			glNormal3f(0.0f, 1.0f, 0.0f);
 			glVertex3fv(quads[i][0]);
 			glVertex3fv(quads[i][1]);
 			glVertex3fv(quads[i][2]);
@@ -254,6 +278,7 @@ void cast_shadows(void)
 	for (int i = 0; i < 2; ++i) {
 		glBegin(GL_POLYGON);
 		{
+			glNormal3f(0.0f, 1.0f, 0.0f);
 			glVertex3fv(triangles[i][0]);
 			glVertex3fv(triangles[i][1]);
 			glVertex3fv(triangles[i][2]);
