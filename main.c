@@ -43,7 +43,6 @@ volatile bool shadows_on = false;
 volatile bool freeze_sun = false;
 volatile bool mystery_var = false;
 
-
 // Menu ids
 static int main_menu_id;
 static int polygon_submenu_id;
@@ -62,6 +61,7 @@ static GLint subdivision_count = 4;
 // List ids for the many polygons that the ground consists of
 static GLushort ground_polygons_ids[POLY_COUNT];
 
+// Camera setup
 static volatile GLdouble cam_pos[] = { 0.0, 40.0, 70.0 };
 static volatile GLdouble cam_angle_horizontal = 0.0;
 static volatile GLdouble cam_angle_vertical = 29.74488129694223;
@@ -71,16 +71,14 @@ typedef GLfloat point3f[3];
 typedef GLfloat vector3f[3];
 
 
-//LIGHT EXPLANATION
-//position(x,y,z,w), x,y,z indicate starting poisiton of the light relative to the modelview matrix, 
-// w indicates whether the light is a near light source (1) or a far away light source (0)
-//direction(x,y,z,c), x,y,z indicate the position the light source points at in homogeneous object coordinates
-//diffusion(r,g,b,a), ambient(r,g,b,a), specular(r,g,b,a) all indicate their respective light attribute
-//	with r,g,b,a being the normalized RGBA values for the source from -1.0 to 1.0
-//
-//kateuthintiki = specular
-//diaxiti = diffuse
-//periballontos fotos = ambient
+/*	LIGHT EXPLANATION
+*
+*	position(x,y,z,w), x,y,z indicate starting poisiton of the light relative to the modelview matrix,
+*	w indicates whether the light is a near light source (1) or a far away light source (0)
+*
+*	direction(x,y,z,c), x,y,z indicate the position the light source points at in homogeneous object coordinates
+*	diffusion(r,g,b,a), ambient(r,g,b,a), specular(r,g,b,a) all indicate their respective light attribute
+*	with r,g,b,a being the normalized RGBA values for the source from -1.0 to 1.0 */
 
 // Sun Light and Materials
 static GLfloat sunlight = 0.3f;
@@ -153,93 +151,9 @@ void cross_product(vector3f out,
 
 // ---------------------- SHADOW IMPLEMENTATION (START) ---------------------- //
 
-
-void shadow_check_3(point3f polygon_shadow[3], GLfloat limit1, GLfloat limit2)
-{
-	GLfloat t;
-	point3f a;
-	point3f b;
-
-	for (int i = 0; i < 3; ++i)
-	{
-		for (int j = 0; j < 3; ++j)
-		{
-			a[j] = polygon_shadow[i][j];
-			b[j] = polygon_shadow[(i + 1) % 4][j];
-		}
-
-		if (b[0] < limit1)
-		{
-			t = (limit1 - a[0]) / (b[0] - a[0]);
-			b[0] = limit1;
-			b[2] = a[2] + t * (b[2] - a[2]);
-		}
-		if (b[0] > limit2)
-		{
-			t = (limit2 - a[0]) / (b[0] - a[0]);
-			b[0] = limit2;
-			b[2] = a[2] + t * (b[2] - a[2]);
-		}
-		if (b[2] < limit1)
-		{
-			t = (limit1 - a[2]) / (b[2] - a[2]);
-			b[0] = a[2] + t * (b[2] - a[2]);
-			b[2] = limit1;
-		}
-		if (b[0] > limit2)
-		{
-			t = (limit2 - a[2]) / (b[2] - a[2]);
-			b[0] = a[2] + t * (b[2] - a[2]);
-			b[2] = limit2;
-		}
-	}
-}
-
-void shadow_check_4(point3f polygon_shadow[4], GLfloat limit1, GLfloat limit2)
-{
-	GLfloat t;
-	point3f a;
-	point3f b;
-
-	for (int i = 0; i < 4; ++i) 
-	{
-		for (int j = 0; j < 3; ++j)
-		{
-			a[j] = polygon_shadow[i][j];
-			b[j] = polygon_shadow[(i + 1) % 4][j];
-		}
-
-		if (b[0] < limit1)
-		{
-			t = (limit1 - a[0]) / (b[0] - a[0]);
-			b[0] = limit1;
-			b[2] = a[2] + t * (b[2] - a[2]);
-		}
-		if (b[0] > limit2)
-		{
-			t = (limit2 - a[0]) / (b[0] - a[0]);
-			b[0] = limit2;
-			b[2] = a[2] + t * (b[2] - a[2]);
-		}
-		if (b[2] < limit1)
-		{
-			t = (limit1 - a[2]) / (b[2] - a[2]);
-			b[0] = a[2] + t * (b[2] - a[2]);
-			b[2] = limit1;
-		}
-		if (b[0] > limit2)
-		{
-			t = (limit2 - a[2]) / (b[2] - a[2]);
-			b[0] = a[2] + t * (b[2] - a[2]);
-			b[2] = limit2;
-		}
-	}
-}
-
 void getShadow3f(point3f polygon_shadow[3], const point3f polygon[3])
 {
 	GLfloat t;
-
 	GLfloat Lx = light_source_pos[0];
 	GLfloat Ly = light_source_pos[1];
 
@@ -250,13 +164,11 @@ void getShadow3f(point3f polygon_shadow[3], const point3f polygon[3])
 		polygon_shadow[i][1] = 0.1f;
 		polygon_shadow[i][2] = -t * polygon[i][2];
 	}
-	shadow_check_3(polygon_shadow, -40.0f, 40.0f);
 }
 
 void getShadow4f(point3f polygon_shadow[4], const point3f polygon[4])
 {
 	GLfloat t;
-
 	GLfloat Lx = light_source_pos[0];
 	GLfloat Ly = light_source_pos[1];
 
@@ -267,7 +179,6 @@ void getShadow4f(point3f polygon_shadow[4], const point3f polygon[4])
 		polygon_shadow[i][1] = 0.1f;
 		polygon_shadow[i][2] = -t * polygon[i][2];
 	}
-	shadow_check_4(polygon_shadow, -40.0f, 40.0f);
 }
 
 // Physical manifestation of the Shadows
@@ -444,7 +355,7 @@ void update_sunlight(void)
 		sun_angle_rad = (GLdouble)(-sun_angle) * M_PI / 180.0;
 		light_source_pos[0] = -50.0f * (GLfloat)cos(sun_angle_rad);
 		light_source_pos[1] = 50.0f * (GLfloat)sin(sun_angle_rad);
-		printf("angle = %.4lf: (%.3f, %.3f, %.3f)\n", sun_angle, light_source_pos[0], light_source_pos[1], 0.0f);
+		//printf("angle = %.4lf: (%.3f, %.3f, %.3f)\n", sun_angle, light_source_pos[0], light_source_pos[1], 0.0f);
 	}
 
 	//Update light respectively
@@ -930,7 +841,7 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutInitWindowPosition(0, 0);
-	glutCreateWindow("Project 3 - Farm House (AEM1: 3713, AEM2: 3938");
+	glutCreateWindow("Project 3 - Farm House (AEM1: 3713, AEM2: 3938)");
 
 	// Attributes
 	glEnable(GL_DEPTH_TEST);				// Depth Buffer
@@ -955,6 +866,9 @@ int main(int argc, char* argv[])
 	glutKeyboardFunc(keyboard);
 
 	// ----------- CALLBACK FUNCTIONS (END) ----------- //
+
+	printf("Press 'S' to toggle projection shadows\n");
+	printf("Press 'F' to toggle sun movement\n");
 
 	glutMainLoop();
 
