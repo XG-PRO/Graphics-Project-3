@@ -153,40 +153,85 @@ void cross_product(vector3f out,
 
 // ---------------------- SHADOW IMPLEMENTATION (START) ---------------------- //
 
-void shadow_check_4(point3f polygon_shadow[4], int len, GLfloat limit1, GLfloat limit2)
+
+void shadow_check_3(point3f polygon_shadow[3], GLfloat limit1, GLfloat limit2)
 {
 	GLfloat t;
-	point3f *a;
-	point3f *b;
+	point3f a;
+	point3f b;
+
+	for (int i = 0; i < 3; ++i)
+	{
+		for (int j = 0; j < 3; ++j)
+		{
+			a[j] = polygon_shadow[i][j];
+			b[j] = polygon_shadow[(i + 1) % 4][j];
+		}
+
+		if (b[0] < limit1)
+		{
+			t = (limit1 - a[0]) / (b[0] - a[0]);
+			b[0] = limit1;
+			b[2] = a[2] + t * (b[2] - a[2]);
+		}
+		if (b[0] > limit2)
+		{
+			t = (limit2 - a[0]) / (b[0] - a[0]);
+			b[0] = limit2;
+			b[2] = a[2] + t * (b[2] - a[2]);
+		}
+		if (b[2] < limit1)
+		{
+			t = (limit1 - a[2]) / (b[2] - a[2]);
+			b[0] = a[2] + t * (b[2] - a[2]);
+			b[2] = limit1;
+		}
+		if (b[0] > limit2)
+		{
+			t = (limit2 - a[2]) / (b[2] - a[2]);
+			b[0] = a[2] + t * (b[2] - a[2]);
+			b[2] = limit2;
+		}
+	}
+}
+
+void shadow_check_4(point3f polygon_shadow[4], GLfloat limit1, GLfloat limit2)
+{
+	GLfloat t;
+	point3f a;
+	point3f b;
 
 	for (int i = 0; i < 4; ++i) 
 	{
-		a = &polygon_shadow[i];
-		b = &polygon_shadow[(i + 1) % 4];
+		for (int j = 0; j < 3; ++j)
+		{
+			a[j] = polygon_shadow[i][j];
+			b[j] = polygon_shadow[(i + 1) % 4][j];
+		}
 
-		if (*b[0] < limit1)
+		if (b[0] < limit1)
 		{
-			t = (limit1 - *a[0]) / (*b[0] - *a[0]);
-			*b[0] = limit1;
-			*b[2] = *a[2] + t * (*b[2] - *a[2]);
+			t = (limit1 - a[0]) / (b[0] - a[0]);
+			b[0] = limit1;
+			b[2] = a[2] + t * (b[2] - a[2]);
 		}
-		if (*b[0] > limit2)
+		if (b[0] > limit2)
 		{
-			t = (limit2 - *a[0]) / (*b[0] - *a[0]);
-			*b[0] = limit2;
-			*b[2] = *a[2] + t * (*b[2] - *a[2]);
+			t = (limit2 - a[0]) / (b[0] - a[0]);
+			b[0] = limit2;
+			b[2] = a[2] + t * (b[2] - a[2]);
 		}
-		if (*b[2] < limit1)
+		if (b[2] < limit1)
 		{
-			t = (limit1 - *a[2]) / (*b[2] - *a[2]);
-			*b[0] = *a[2] + t * (*b[2] - *a[2]);
-			*b[2] = limit1;
+			t = (limit1 - a[2]) / (b[2] - a[2]);
+			b[0] = a[2] + t * (b[2] - a[2]);
+			b[2] = limit1;
 		}
-		if (*b[0] > limit2)
+		if (b[0] > limit2)
 		{
-			t = (limit2 - *a[2]) / (*b[2] - *a[2]);
-			*b[0] = *a[2] + t * (*b[2] - *a[2]);
-			*b[2] = limit2;
+			t = (limit2 - a[2]) / (b[2] - a[2]);
+			b[0] = a[2] + t * (b[2] - a[2]);
+			b[2] = limit2;
 		}
 	}
 }
@@ -205,7 +250,7 @@ void getShadow3f(point3f polygon_shadow[3], const point3f polygon[3])
 		polygon_shadow[i][1] = 0.1f;
 		polygon_shadow[i][2] = -t * polygon[i][2];
 	}
-	shadow_check(polygon_shadow, 3, -40.0f, 40.0f);
+	shadow_check_3(polygon_shadow, -40.0f, 40.0f);
 }
 
 void getShadow4f(point3f polygon_shadow[4], const point3f polygon[4])
@@ -222,7 +267,7 @@ void getShadow4f(point3f polygon_shadow[4], const point3f polygon[4])
 		polygon_shadow[i][1] = 0.1f;
 		polygon_shadow[i][2] = -t * polygon[i][2];
 	}
-	shadow_check(polygon_shadow, 4, -40.0f, 40.0f);
+	shadow_check_4(polygon_shadow, -40.0f, 40.0f);
 }
 
 // Physical manifestation of the Shadows
