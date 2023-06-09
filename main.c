@@ -113,7 +113,7 @@ static GLfloat diffuse_spotlight[] = { 1.0f , 1.0f, 1.0f, 1.0f };
 static GLfloat ambient_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat spec_spotlight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat position_spotlight[] = { 0.0f, (GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
-static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, 10.0f, 1.0f };
+static GLfloat direction_spotlight[] = { 0.0f, -(GLfloat)SQRT_75_PLUS_10, 10.0f};
 
 
 // All displayed polygons of the world (except sun)
