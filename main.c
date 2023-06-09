@@ -151,28 +151,13 @@ void cross_product(vector3f out,
 
 // ---------------------- SHADOW IMPLEMENTATION (START) ---------------------- //
 
-void getShadow3f(point3f polygon_shadow[3], const point3f polygon[3])
+void getShadow(point3f* polygon_shadow, const point3f* polygon, int n_vert)
 {
 	GLfloat t;
 	GLfloat Lx = light_source_pos[0];
 	GLfloat Ly = light_source_pos[1];
 
-	for (int i = 0; i < 3; ++i)
-	{
-		t = -Ly / (polygon[i][1] - Ly);
-		polygon_shadow[i][0] = Lx + t * (polygon[i][0] - Lx);
-		polygon_shadow[i][1] = 0.1f;
-		polygon_shadow[i][2] = -t * polygon[i][2];
-	}
-}
-
-void getShadow4f(point3f polygon_shadow[4], const point3f polygon[4])
-{
-	GLfloat t;
-	GLfloat Lx = light_source_pos[0];
-	GLfloat Ly = light_source_pos[1];
-
-	for (int i = 0; i < 4; ++i) 
+	for (int i = 0; i < n_vert; ++i) 
 	{
 		t = -Ly / (polygon[i][1] - Ly);
 		polygon_shadow[i][0] = Lx + t * (polygon[i][0] - Lx);
@@ -207,14 +192,14 @@ void cast_shadows(void)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
 
-	getShadow4f(east_wall_shadow, EAST_WALL_COORDINATES);
-	getShadow4f(west_wall_shadow, WEST_WALL_COORDINATES);
-	getShadow4f(south_wall_shadow, SOUTH_WALL_COORDINATES);
-	getShadow4f(north_wall_shadow, NORTH_WALL_COORDINATES);
-	getShadow4f(east_roof_shadow, EAST_ROOF_COORDINATES);
-	getShadow4f(west_roof_shadow, WEST_ROOF_COORDINATES);
-	getShadow3f(south_roof_shadow, SOUTH_ROOF_COORDINATES);
-	getShadow3f(north_roof_shadow, NORTH_ROOF_COORDINATES);
+	getShadow(east_wall_shadow, EAST_WALL_COORDINATES, 4);
+	getShadow(west_wall_shadow, WEST_WALL_COORDINATES, 4);
+	getShadow(south_wall_shadow, SOUTH_WALL_COORDINATES, 4);
+	getShadow(north_wall_shadow, NORTH_WALL_COORDINATES, 4);
+	getShadow(east_roof_shadow, EAST_ROOF_COORDINATES, 4);
+	getShadow(west_roof_shadow, WEST_ROOF_COORDINATES, 4);
+	getShadow(south_roof_shadow, SOUTH_ROOF_COORDINATES, 3);
+	getShadow(north_roof_shadow, NORTH_ROOF_COORDINATES, 3);
 
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_shadow);
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_shadow);
@@ -345,7 +330,7 @@ void update_sunlight(void)
 	//Sun rotates backwards
 	//Start increasing the intensity until the sun reaches the top of the plane
 	//Start decreasing the intensity after the sun reaches the top of the plane
-	if (sun_angle > -90)
+	if (sun_angle > -90.0f)
 		sunlight += 0.7f / 90;
 	else
 		sunlight -= 0.7f / 90;
@@ -380,8 +365,8 @@ void build_sun(void)
 		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
 
 		//Rotate sun on the plane so it resemples dawn and dusk
-		glRotated(sun_angle, 0.0, 0.0, 1.0);
-		glTranslatef(-50.0, 0.0, 0.0);
+		glRotatef(sun_angle, 0.0f, 0.0f, 1.0f);
+		glTranslatef(-50.0f, 0.0f, 0.0f);
 
 		//Create sun's polygons
 		tetrahedron(subdivision_count);
@@ -426,7 +411,6 @@ void build_house(void)
 // Physical manifestation of the Grass
 void build_grass(void)
 {
-	glColor3f(GRASS);
 	glMaterialf(GL_FRONT, GL_SHININESS, 0.0f);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_grass);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, spec_grass);
@@ -479,12 +463,12 @@ void display(void)
 	//Sun Creation
 	build_sun();
 
+	//Grass Creation
+	build_grass();
+
 	// Projection shadows
 	if (shadows_on)
 		cast_shadows();
-
-	//Grass Creation
-	build_grass();
 
 	//Spotlight Creation
 	if (spotlight_on)
@@ -850,7 +834,6 @@ int main(int argc, char* argv[])
 	glEnable(GL_LIGHT0);					// Light Source
 	//glEnable(GL_NORMALIZE);				// Normals Preservation for units
 	//glEnable(GL_COLOR_MATERIAL);			// Make glColorf() as Material
-	glShadeModel(GL_SMOOTH);				// Smooth Shading Model
 
 	// Pre-compiled lists initialization
 	init_lists();
